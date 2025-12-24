@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-// Pastikan path ini benar sesuai struktur folder Anda
-// Jika error, bisa ganti sementara jadi: const API_URL = 'http://localhost:3000/api';
-import { API_URL } from '../utils/api'; 
+// Import fungsi bantuan dari api.js
+import { postData } from '../utils/api'; 
 
 const Login = () => {
   const navigate = useNavigate();
@@ -28,43 +27,31 @@ const Login = () => {
     setErrorMsg('');
 
     try {
-      // 1. KIRIM DATA KE BACKEND
-      const response = await fetch(`${API_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+      // ✅ PERBAIKAN: Gunakan postData dan arahkan ke '/api/login'
+      const result = await postData('/api/login', formData);
 
-      const result = await response.json();
-
-      // 2. CEK JAWABAN DARI BACKEND
-      if (result.success) {
+      // Cek hasil dari backend
+      if (result && result.success) {
         // Simpan sesi user
         localStorage.setItem('user_session', JSON.stringify(result.user));
         
-        alert(`Selamat datang, ${result.user.nama_depan}!`);
-
-        // === LOGIKA PEMBEDA HALAMAN (UPDATED) ===
-        // Cek tipe_pengguna untuk mengarahkan ke halaman yang benar
+        // Redirect sesuai tipe user
         if (result.user.tipe_pengguna === 'admin') {
-            // JIKA ADMIN -> Masuk Dashboard Admin
             navigate('/admin');
         } else if (result.user.tipe_pengguna === 'tukang') {
-            // JIKA TUKANG -> Masuk Dashboard Mitra
             navigate('/tukang');
         } else {
-            // JIKA PELANGGAN -> Masuk Beranda User
             navigate('/beranda');
         }
 
       } else {
-        // Jika Password Salah / Email tidak ketemu
-        setErrorMsg(result.message || 'Login Gagal. Cek email & password.');
+        // Jika Password Salah atau User tidak ditemukan
+        setErrorMsg(result?.message || 'Login Gagal. Cek email & password.');
       }
 
     } catch (error) {
       console.error("Error Login:", error);
-      setErrorMsg('Gagal terhubung ke server. Pastikan backend menyala.');
+      setErrorMsg('Gagal terhubung ke server.');
     } finally {
       setIsLoading(false);
     }
