@@ -1,21 +1,12 @@
-// ✅ URL Backend Railway (Sudah benar)
+// File: src/utils/api.js
+
+// URL Backend Railway Anda (Jangan diubah-ubah lagi)
 export const API_URL = "https://backend-production-b8f3.up.railway.app";
 
-// Helper Function: Untuk Mengambil Data (GET) - Contoh: List Tukang, List Pesanan
-export const fetchData = async (endpoint) => {
-    try {
-        const response = await fetch(`${API_URL}${endpoint}`);
-        const result = await response.json();
-        return result;
-    } catch (error) {
-        console.error("API GET Error:", error);
-        return null;
-    }
-};
-
-// Helper Function: Untuk Mengirim Data (POST) - Contoh: Login, Register
+// Fungsi Login / Register (POST)
 export const postData = async (endpoint, data) => {
     try {
+        // Gabungkan URL + Endpoint (misal: /api/login)
         const response = await fetch(`${API_URL}${endpoint}`, {
             method: 'POST',
             headers: {
@@ -25,7 +16,7 @@ export const postData = async (endpoint, data) => {
         });
         return await response.json();
     } catch (error) {
-        console.error("API POST Error:", error);
-        return { success: false, message: "Terjadi kesalahan koneksi" };
+        console.error("API Error:", error);
+        return { success: false, message: "Gagal terhubung ke server Backend." };
     }
 };
