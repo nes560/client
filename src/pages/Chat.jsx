@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../../components/Sidebar';
-import BottomNav from '../../components/BottomNav';
+import Sidebar from '../components/Sidebar';
+import BottomNav from '../components/BottomNav';
 
 const Chat = () => {
   const navigate = useNavigate();
