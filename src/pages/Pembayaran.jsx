@@ -155,7 +155,7 @@ const Pembayaran = () => {
                 <CheckCircle className="w-5 h-5" /> Saya Sudah Membayar
             </button>
             <button 
-                onClick={() => navigate('/riwayat-pesanan')}
+                onClick={() => navigate('/beranda')}
                 className="w-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2"
             >
                 <ArrowLeft className="w-5 h-5" /> Bayar Nanti
