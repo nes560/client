@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import BottomNav from '../components/BottomNav';
-import { API_URL } from '../utils/api'; 
 
 const Pesanan = () => {
   const navigate = useNavigate();
+  
+  // --- 1. URL BACKEND (Hardcoded agar pasti benar) ---
+  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
+
   const [userName, setUserName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -23,6 +26,7 @@ const Pesanan = () => {
     const userSession = JSON.parse(localStorage.getItem('user_session'));
     if (userSession) {
         setUserName(`${userSession.nama_depan} ${userSession.nama_belakang}`);
+        // Isi alamat otomatis jika ada di profil
         if (userSession.alamat) {
             setFormData(prev => ({ ...prev, alamat: userSession.alamat }));
         }
@@ -38,18 +42,20 @@ const Pesanan = () => {
 
   // Handle saat user memilih file
   const handleFileChange = (e) => {
-      setFotoFile(e.target.files[0]);
+      if (e.target.files && e.target.files[0]) {
+          setFotoFile(e.target.files[0]);
+      }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // --- GUNAKAN FORMDATA UNTUK UPLOAD FILE ---
+    // --- 2. GUNAKAN FORMDATA UNTUK UPLOAD FILE ---
     const dataToSend = new FormData();
     dataToSend.append('nama_user', userName);
-    dataToSend.append('kategori', formData.kategori);
-    dataToSend.append('deskripsi', formData.deskripsi);
+    dataToSend.append('kategori_jasa', formData.kategori); // Sesuaikan dengan nama kolom DB (kategori_jasa)
+    dataToSend.append('deskripsi_masalah', formData.deskripsi); // Sesuaikan dengan nama kolom DB (deskripsi_masalah)
     dataToSend.append('alamat', formData.alamat);
     
     // Masukkan foto ke FormData jika ada
@@ -57,24 +63,37 @@ const Pesanan = () => {
         dataToSend.append('foto', fotoFile);
     }
 
+    // DEBUG: Cek di Console browser apa yang dikirim
+    console.log("Mengirim data...", Object.fromEntries(dataToSend));
+
     try {
       const response = await fetch(`${API_URL}/pesanan`, {
         method: 'POST',
+        // JANGAN set Header 'Content-Type' secara manual saat pakai FormData!
+        // Biarkan browser yang mengaturnya otomatis (multipart/form-data)
         body: dataToSend
       });
 
       const result = await response.json();
 
       if (result.success) {
-        // === PERBAIKAN DISINI ===
-        // Redirect ke halaman pembayaran dengan membawa ID Pesanan
-        navigate(`/pembayaran/${result.orderId}`);
+        alert("✅ Pesanan Berhasil Dibuat!");
+        // Redirect ke halaman pembayaran atau riwayat
+        // Pastikan result.orderId atau result.insertId ada dari backend
+        const idPesanan = result.orderId || result.insertId || result.data?.id;
+        
+        if (idPesanan) {
+            navigate(`/pembayaran/${idPesanan}`);
+        } else {
+            navigate('/riwayat-pesanan'); // Fallback jika ID tidak terbaca
+        }
       } else {
-        alert("❌ Gagal: " + result.message);
+        console.error("Gagal dari server:", result);
+        alert("❌ Gagal: " + (result.message || "Terjadi kesalahan sistem"));
       }
     } catch (error) {
       console.error("Error submit:", error);
-      alert("Terjadi kesalahan koneksi.");
+      alert("Terjadi kesalahan koneksi. Pastikan Backend sudah support upload file.");
     } finally {
       setIsLoading(false);
     }
