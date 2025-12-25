@@ -7,12 +7,8 @@ const Chat = () => {
   const navigate = useNavigate();
   const chatEndRef = useRef(null);
 
-  // === 1. URL BACKEND (SUDAH TERMASUK /api) ===
-  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
-  
-  // === 2. ID ADMIN PUSAT ===
+  // ID Admin Pusat (Sesuai Database Anda)
   const ADMIN_ID = 28;
-  // ==========================
 
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -33,9 +29,9 @@ const Chat = () => {
     if (!userSession) return;
 
     try {
-      // PERBAIKAN: Gunakan `${API_URL}/chats`
-      // (Jangan tulis /api lagi karena sudah ada di variabel API_URL)
-      const response = await fetch(`${API_URL}/chats`); 
+      // PERBAIKAN FINAL: Tulis URL Lengkap secara manual agar tidak meleset
+      const response = await fetch("https://backend-production-b8f3.up.railway.app/api/chats");
+      
       const result = await response.json();
 
       if (result.success) {
@@ -73,8 +69,8 @@ const Chat = () => {
     setInputText(''); 
 
     try {
-      // PERBAIKAN: Gunakan `${API_URL}/chats`
-      await fetch(`${API_URL}/chats`, {
+      // PERBAIKAN FINAL: Tulis URL Lengkap secara manual
+      await fetch("https://backend-production-b8f3.up.railway.app/api/chats", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -92,21 +88,15 @@ const Chat = () => {
 
   return (
     <div className="max-w-7xl mx-auto min-h-screen relative md:flex font-sans text-slate-800 bg-slate-50">
-      
-      {/* SIDEBAR (Desktop) */}
       <Sidebar activeView="chat" />
-
-      {/* KONTEN UTAMA */}
       <main className="flex-1 h-screen relative flex flex-col bg-slate-100">
-            
+        
         {/* Header Chat */}
         <div className="bg-white px-6 py-4 shadow-sm flex items-center justify-between z-10 border-b border-slate-200">
             <div className="flex items-center gap-3">
-                {/* Tombol Back Mobile */}
                 <button onClick={() => navigate('/beranda')} className="md:hidden text-slate-500">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                 </button>
-                
                 <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
                     A
                 </div>
@@ -129,7 +119,6 @@ const Chat = () => {
 
             {messages.map((msg) => {
                 const isMe = msg.sender_id === userSession?.id;
-                
                 return (
                     <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                         <div className={`px-4 py-3 rounded-2xl max-w-[80%] shadow-sm text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none'}`}>
@@ -161,10 +150,7 @@ const Chat = () => {
         </div>
 
       </main>
-
-      {/* MENU BAWAH (Mobile) */}
       <BottomNav setView={() => navigate('/beranda')} />
-      
     </div>
   );
 };
