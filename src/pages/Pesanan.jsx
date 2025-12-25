@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import BottomNav from '../components/BottomNav';
+import Sidebar from '../components/Sidebar';      // Pastikan path ini benar sesuai folder Anda
+import BottomNav from '../components/BottomNav';  // Pastikan path ini benar sesuai folder Anda
 
 const Pesanan = () => {
   const navigate = useNavigate();
   
-  // --- 1. URL BACKEND (Hardcoded agar pasti benar) ---
-  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
+  // URL BACKEND YANG BENAR (Pakai /api)
+  const API_BASE_URL = "https://backend-production-b8f3.up.railway.app/api";
 
   const [userName, setUserName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +26,6 @@ const Pesanan = () => {
     const userSession = JSON.parse(localStorage.getItem('user_session'));
     if (userSession) {
         setUserName(`${userSession.nama_depan} ${userSession.nama_belakang}`);
-        // Isi alamat otomatis jika ada di profil
         if (userSession.alamat) {
             setFormData(prev => ({ ...prev, alamat: userSession.alamat }));
         }
@@ -40,7 +39,6 @@ const Pesanan = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle saat user memilih file
   const handleFileChange = (e) => {
       if (e.target.files && e.target.files[0]) {
           setFotoFile(e.target.files[0]);
@@ -51,49 +49,47 @@ const Pesanan = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // --- 2. GUNAKAN FORMDATA UNTUK UPLOAD FILE ---
     const dataToSend = new FormData();
     dataToSend.append('nama_user', userName);
-    dataToSend.append('kategori_jasa', formData.kategori); // Sesuaikan dengan nama kolom DB (kategori_jasa)
-    dataToSend.append('deskripsi_masalah', formData.deskripsi); // Sesuaikan dengan nama kolom DB (deskripsi_masalah)
+    dataToSend.append('kategori_jasa', formData.kategori);
+    dataToSend.append('deskripsi_masalah', formData.deskripsi);
     dataToSend.append('alamat', formData.alamat);
     
-    // Masukkan foto ke FormData jika ada
     if (fotoFile) {
         dataToSend.append('foto', fotoFile);
     }
 
-    // DEBUG: Cek di Console browser apa yang dikirim
-    console.log("Mengirim data...", Object.fromEntries(dataToSend));
-
     try {
-      const response = await fetch(`${API_URL}/pesanan`, {
+      // PERBAIKAN: Gunakan URL lengkap dengan /api
+      const response = await fetch(`${API_BASE_URL}/pesanan`, {
         method: 'POST',
-        // JANGAN set Header 'Content-Type' secara manual saat pakai FormData!
-        // Biarkan browser yang mengaturnya otomatis (multipart/form-data)
         body: dataToSend
+        // Jangan set header Content-Type manual, biarkan browser yang atur boundary FormData
       });
+
+      // Cek jika response bukan JSON (misal error HTML dari server)
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Server tidak merespon dengan JSON. Cek URL API atau Backend.");
+      }
 
       const result = await response.json();
 
       if (result.success) {
         alert("✅ Pesanan Berhasil Dibuat!");
-        // Redirect ke halaman pembayaran atau riwayat
-        // Pastikan result.orderId atau result.insertId ada dari backend
-        const idPesanan = result.orderId || result.insertId || result.data?.id;
-        
-        if (idPesanan) {
-            navigate(`/pembayaran/${idPesanan}`);
+        // Ambil ID pesanan untuk redirect
+        const orderId = result.orderId || result.insertId || result.data?.id;
+        if(orderId) {
+            navigate(`/pembayaran/${orderId}`);
         } else {
-            navigate('/riwayat-pesanan'); // Fallback jika ID tidak terbaca
+            navigate('/riwayat-pesanan');
         }
       } else {
-        console.error("Gagal dari server:", result);
-        alert("❌ Gagal: " + (result.message || "Terjadi kesalahan sistem"));
+        alert("❌ Gagal: " + (result.message || "Terjadi kesalahan server"));
       }
     } catch (error) {
       console.error("Error submit:", error);
-      alert("Terjadi kesalahan koneksi. Pastikan Backend sudah support upload file.");
+      alert("Gagal terhubung ke server. Pastikan Backend sudah di-deploy dengan benar.");
     } finally {
       setIsLoading(false);
     }
@@ -101,6 +97,7 @@ const Pesanan = () => {
 
   return (
     <div className="max-w-7xl mx-auto min-h-screen relative md:flex font-sans text-slate-800 bg-slate-50">
+      {/* Pastikan Sidebar dirender dengan benar */}
       <Sidebar activeView="pesanan" />
 
       <main className="flex-1 min-h-screen relative overflow-x-hidden pb-24 md:pb-0 p-6 md:p-10">
@@ -135,7 +132,7 @@ const Pesanan = () => {
                     </select>
                 </div>
 
-                {/* INPUT FOTO */}
+                {/* Upload Foto */}
                 <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">Upload Foto Kerusakan</label>
                     <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 bg-slate-50 text-center hover:bg-blue-50 hover:border-blue-300 transition cursor-pointer relative">
@@ -163,7 +160,7 @@ const Pesanan = () => {
                 {/* Deskripsi */}
                 <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">Detail Masalah</label>
-                    <textarea name="deskripsi" value={formData.deskripsi} onChange={handleChange} rows="3" placeholder="Jelaskan masalahnya..." className="w-full p-4 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500" required></textarea>
+                    <textarea name="deskripsi" value={formData.deskripsi} onChange={handleChange} rows="3" placeholder="Contoh: Lampu ruang tamu mati total..." className="w-full p-4 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500" required></textarea>
                 </div>
 
                 {/* Alamat */}
