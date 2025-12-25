@@ -1,19 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../../components/Sidebar';   // Pastikan path import benar
-import BottomNav from '../../components/BottomNav'; // Pastikan path import benar
+import Sidebar from '../../components/Sidebar';
+import BottomNav from '../../components/BottomNav';
 
 const Chat = () => {
   const navigate = useNavigate();
   const chatEndRef = useRef(null);
 
-  // --- BAGIAN KRUSIAL (JANGAN DIGANTI KE LOCALHOST) ---
-  // 1. URL Backend Railway
+  // === 1. URL BACKEND (SUDAH TERMASUK /api) ===
   const API_URL = "https://backend-production-b8f3.up.railway.app/api";
   
-  // 2. ID Admin Pusat (Sesuai Database Anda)
+  // === 2. ID ADMIN PUSAT ===
   const ADMIN_ID = 28;
-  // ---------------------------------------------------
+  // ==========================
 
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -25,21 +24,22 @@ const Chat = () => {
     if (!sessionStr) {
       navigate('/login');
     } else {
-      const session = JSON.parse(sessionStr);
-      setUserSession(session);
+      setUserSession(JSON.parse(sessionStr));
     }
   }, [navigate]);
 
-  // 2. FUNGSI AMBIL CHAT (POLLING)
+  // 2. AMBIL CHAT (POLLING)
   const fetchMessages = async () => {
     if (!userSession) return;
 
     try {
-      const response = await fetch(`${API_URL}/api/chats`);
+      // PERBAIKAN: Gunakan `${API_URL}/chats`
+      // (Jangan tulis /api lagi karena sudah ada di variabel API_URL)
+      const response = await fetch(`${API_URL}/chats`); 
       const result = await response.json();
 
       if (result.success) {
-        // FILTER: Ambil chat antara SAYA (Pelanggan) <-> ADMIN
+        // FILTER: Chat antara SAYA <-> ADMIN
         const myChats = result.data.filter(msg => 
             (msg.sender_id === userSession.id && msg.receiver_id === ADMIN_ID) ||
             (msg.sender_id === ADMIN_ID && msg.receiver_id === userSession.id)
@@ -73,7 +73,8 @@ const Chat = () => {
     setInputText(''); 
 
     try {
-      await fetch(`${API_URL}/api/chats`, {
+      // PERBAIKAN: Gunakan `${API_URL}/chats`
+      await fetch(`${API_URL}/chats`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
