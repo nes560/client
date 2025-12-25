@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { API_URL } from '../../utils/api'; // Pastikan path import benar
 
 const TukangChat = () => {
   const chatEndRef = useRef(null);
-  const ADMIN_ID = 28; // ID Admin Pusat
+
+  // --- PERBAIKAN DI SINI ---
+  // 1. Kita kunci URL ke Railway agar tidak nyasar ke Localhost lagi
+  const API_URL = "https://backend-production-b8f3.up.railway.app/api"; 
+  
+  // 2. ID Admin = 28 (Sesuai dengan gambar database Anda)
+  const ADMIN_ID = 28; 
+  // -------------------------
 
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -12,7 +18,9 @@ const TukangChat = () => {
   // 1. Cek Login
   useEffect(() => {
     const session = JSON.parse(localStorage.getItem('user_session'));
-    if (session) setUserSession(session);
+    if (session) {
+        setUserSession(session);
+    }
   }, []);
 
   // 2. Ambil Chat (Polling)
@@ -21,8 +29,9 @@ const TukangChat = () => {
     try {
       const response = await fetch(`${API_URL}/chats`);
       const result = await response.json();
+      
       if (result.success) {
-        // Filter: Chat antara SAYA (Tukang) dan ADMIN
+        // Filter: Chat antara SAYA (Tukang) dan ADMIN (ID 28)
         const myChats = result.data.filter(msg => 
             (msg.sender_id === userSession.id && msg.receiver_id === ADMIN_ID) ||
             (msg.sender_id === ADMIN_ID && msg.receiver_id === userSession.id)
@@ -63,9 +72,9 @@ const TukangChat = () => {
             message: originalText
         })
       });
-      fetchMessages();
+      fetchMessages(); // Refresh chat setelah kirim
     } catch (error) {
-      alert("Gagal kirim");
+      alert("Gagal kirim pesan. Cek koneksi internet.");
       setInputText(originalText);
     }
   };
