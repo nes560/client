@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Check, X, Calendar, User } from 'lucide-react'; // Pastikan install lucide-react
+import { MapPin, Check, X, Calendar, User, AlertCircle } from 'lucide-react';
 
 const TukangOrderan = () => {
-  // 1. URL Railway (Hardcoded agar pasti jalan)
+  // 1. URL Railway
   const API_URL = "https://backend-production-b8f3.up.railway.app/api";
 
   const [activeTab, setActiveTab] = useState('pending');
@@ -17,23 +17,32 @@ const TukangOrderan = () => {
       const result = await response.json();
       
       if (result.success) {
-        // --- LOGIKA FILTER PENTING ---
-        // Kita harus mencocokkan status Database dengan Tab Frontend
+        console.log("Semua Data Order:", result.data); // Debugging di Console
+
+        // --- LOGIKA FILTER YANG LEBIH KUAT ---
         const filtered = result.data.filter(o => {
-            const dbStatus = o.status; // Contoh: 'Menunggu Konfirmasi', 'Diproses', 'Selesai'
+            // Ubah status jadi huruf kecil semua biar tidak sensitif huruf besar/kecil
+            const status = o.status ? o.status.toLowerCase() : ''; 
             
             if (activeTab === 'pending') {
-                return dbStatus === 'Menunggu Konfirmasi';
-            } else if (activeTab === 'proses') {
-                return dbStatus === 'Diproses' || dbStatus === 'Sedang Diproses';
-            } else if (activeTab === 'selesai') {
-                return dbStatus === 'Selesai' || dbStatus === 'Dibatalkan';
+                // Masukkan semua yang berbau "menunggu" atau "pending" atau "baru"
+                return status.includes('menunggu') || status === 'pending' || status === 'baru';
+            } 
+            else if (activeTab === 'proses') {
+                // Masukkan semua yang ada kata "proses" atau "bayar" (jika sudah dibayar dianggap proses)
+                return status.includes('proses') || status.includes('bayar') || status === 'diproses';
+            } 
+            else if (activeTab === 'selesai') {
+                // Masukkan selesai, batal, atau tolak
+                return status.includes('selesai') || status.includes('batal') || status.includes('tolak');
             }
             return false;
         });
         
-        // Urutkan dari yang terbaru (ID terbesar)
-        setOrders(filtered.sort((a, b) => b.id - a.id));
+        // Urutkan dari ID Terbesar (Terbaru) ke Terkecil (Terlama)
+        const sortedOrders = filtered.sort((a, b) => b.id - a.id);
+        
+        setOrders(sortedOrders);
       }
     } catch (error) {
       console.error("Gagal ambil order:", error);
@@ -47,7 +56,6 @@ const TukangOrderan = () => {
   }, [activeTab]);
 
   // UPDATE STATUS
-  // newStatus harus sesuai kata-kata di Database: 'Diproses', 'Selesai', 'Dibatalkan'
   const handleUpdateStatus = async (id, newStatus) => {
     const confirmMessage = newStatus === 'Diproses' ? "Terima pekerjaan ini?" : 
                            newStatus === 'Selesai' ? "Selesaikan pekerjaan ini?" : 
@@ -99,27 +107,32 @@ const TukangOrderan = () => {
               <div className="text-center py-10 text-slate-400">Memuat data...</div>
           ) : orders.length === 0 ? (
               <div className="text-center py-10 text-slate-400 border border-dashed border-slate-200 rounded-xl bg-white mx-4">
-                  <p>Tidak ada orderan di tab ini.</p>
-                  {activeTab === 'pending' && <p className="text-xs mt-1">Orderan baru akan muncul di sini.</p>}
+                  <div className="flex justify-center mb-2"><AlertCircle className="text-slate-300"/></div>
+                  <p>Tidak ada orderan di tab <b>{activeTab === 'pending' ? 'Baru Masuk' : activeTab === 'proses' ? 'Sedang Proses' : 'Riwayat'}</b>.</p>
               </div>
           ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20">
                   {orders.map(order => (
-                      <div key={order.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition">
+                      <div key={order.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition relative">
                           
+                          {/* Label Status Real dari Database (Debug Helper) */}
+                          <div className="absolute top-4 right-4 text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-500">
+                             Status: {order.status}
+                          </div>
+
                           {/* Foto Masalah (Jika Ada) */}
                           {order.foto_masalah && (
-                             <div className="mb-3 rounded-lg overflow-hidden h-32 bg-slate-100 relative group">
+                             <div className="mb-3 rounded-lg overflow-hidden h-32 bg-slate-100 relative group mt-6">
                                 <img 
                                     src={`${API_URL}/../uploads/${order.foto_masalah}`} 
                                     alt="Kerusakan" 
                                     className="w-full h-full object-cover"
-                                    onError={(e) => {e.target.style.display='none'}} // Sembunyikan jika gambar rusak
+                                    onError={(e) => {e.target.style.display='none'}}
                                 />
                              </div>
                           )}
                           
-                          <div className="flex justify-between mb-2 items-center">
+                          <div className={`flex justify-between mb-2 items-center ${!order.foto_masalah ? 'mt-8' : ''}`}>
                               <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide border border-blue-100">
                                 {order.kategori_jasa}
                               </span>
