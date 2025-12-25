@@ -35,7 +35,7 @@ const Chat = () => {
     if (!userSession) return;
 
     try {
-      const response = await fetch(`${API_URL}/chats`);
+      const response = await fetch(`${API_URL}/api/chats`);
       const result = await response.json();
 
       if (result.success) {
@@ -73,7 +73,7 @@ const Chat = () => {
     setInputText(''); 
 
     try {
-      await fetch(`${API_URL}/chats`, {
+      await fetch(`${API_URL}/api/chats`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
