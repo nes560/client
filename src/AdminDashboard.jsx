@@ -63,13 +63,13 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     try {
       // 1. Ambil Data Users
-      const resUser = await fetch('http://localhost:3000/api/users/all');
+      const resUser = await fetch('https://backend-production-b8f3.up.railway.app/api/users/all');
       const dataUser = await resUser.json();
       const userList = dataUser.success ? dataUser.data : [];
       setUsers(userList);
 
       // 2. Ambil Data Orders
-      const resOrder = await fetch('http://localhost:3000/api/pesanan');
+      const resOrder = await fetch('https://backend-production-b8f3.up.railway.app/api/pesanan');
       const dataOrder = await resOrder.json();
       const orderList = dataOrder.success ? dataOrder.data : [];
       setOrders(orderList);
@@ -106,7 +106,7 @@ const AdminDashboard = () => {
   // Fungsi khusus ambil chat saja (untuk auto refresh)
   const fetchChatsOnly = async () => {
       try {
-        const resChat = await fetch('http://localhost:3000/api/chats');
+        const resChat = await fetch('https://backend-production-b8f3.up.railway.app/api/chats');
         const dataChat = await resChat.json();
         if(dataChat.success) {
             setAllChats(dataChat.data);
@@ -123,7 +123,7 @@ const AdminDashboard = () => {
 
       try {
           // Kirim ke backend
-          await fetch('http://localhost:3000/api/chats', {
+          await fetch('https://backend-production-b8f3.up.railway.app/api/chats', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -157,7 +157,7 @@ const AdminDashboard = () => {
   const handleDeleteUser = async (id) => {
     if(!window.confirm("⚠️ PERINGATAN: Menghapus user ini bersifat permanen. Lanjutkan?")) return;
     try {
-        await fetch(`http://localhost:3000/api/users/${id}`, { method: 'DELETE' });
+        await fetch(`https://backend-production-b8f3.up.railway.app/api/users/${id}`, { method: 'DELETE' });
         alert("User berhasil dihapus.");
         fetchData(); 
     } catch (error) {
@@ -168,7 +168,7 @@ const AdminDashboard = () => {
   // Fungsi Update Status Order
   const handleUpdateStatus = async (id, newStatus) => {
     try {
-        await fetch(`http://localhost:3000/api/pesanan/${id}`, { 
+        await fetch(`https://backend-production-b8f3.up.railway.app/api/pesanan/${id}`, { 
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: newStatus })

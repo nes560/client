@@ -45,7 +45,7 @@ const Register = () => {
 
     try {
       // 3. Kirim ke Backend
-      const response = await fetch('http://localhost:3000/api/register', {
+      const response = await fetch('https://backend-production-b8f3.up.railway.app/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dataToSend),
