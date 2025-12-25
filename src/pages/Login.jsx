@@ -58,8 +58,13 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-cover bg-center font-sans relative"
-         style={{ backgroundImage: "url('https://img.freepik.com/free-photo/tropical-green-leaves-background_53876-88891.jpg?w=1800')" }}>
+    // ✅ PERBAIKAN: Syntax style ditutup dengan benar
+    <div 
+      className="min-h-screen w-full flex items-center justify-center bg-cover bg-center font-sans relative"
+      style={{ 
+        backgroundImage: "url('https://img.freepik.com/free-vector/construction-blueprint-background_1284-11885.jpg?w=1800')",
+      }}
+    >
       
       {/* Overlay Hitam */}
       <div className="absolute inset-0 bg-black/50"></div>
