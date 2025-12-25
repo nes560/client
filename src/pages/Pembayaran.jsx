@@ -1,16 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { API_URL } from '../utils/api';
 import { QrCode, ArrowLeft, CheckCircle, Info, Phone } from 'lucide-react';
-// Import gambar QR DANA Anda
-import qrisImage from '../assets/qris-dana.jpeg';
 
 const Pembayaran = () => {
-  const { id } = useParams(); // Ambil ID Pesanan dari URL
+  const { id } = useParams();
   const navigate = useNavigate();
+
+  // 1. URL BACKEND (Hardcoded agar pasti jalan)
+  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
+
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [qrisData, setQrisData] = useState(null);
+
+  // Data QRIS Manual (Pengganti fetchQris yang error)
+  const qrisData = {
+    merchant_name: "HandyMan Official",
+    merchant_phone: "0812-3456-7890"
+  };
 
   // Format Rupiah
   const formatRupiah = (number) => {
@@ -22,13 +28,25 @@ const Pembayaran = () => {
   };
 
   useEffect(() => {
-    // 1. Ambil Data Pesanan berdasarkan ID
     const fetchOrder = async () => {
       try {
         const response = await fetch(`${API_URL}/pesanan/${id}`);
+        // Cek apakah response valid
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            throw new Error("Respon bukan JSON");
+        }
+        
         const result = await response.json();
+        
         if (result.success) {
-          setOrder(result.data);
+          // Handle jika data berupa array atau object
+          const data = Array.isArray(result.data) ? result.data[0] : result.data;
+          setOrder(data);
+        } else {
+            // Jika pesanan tidak ditemukan di database
+            alert("Pesanan tidak ditemukan.");
+            navigate('/pesanan');
         }
       } catch (error) {
         console.error("Gagal ambil pesanan:", error);
@@ -37,48 +55,38 @@ const Pembayaran = () => {
       }
     };
 
-    // 2. Ambil Data Merchant (Nomor HP dll)
-    const fetchQris = async () => {
-      try {
-        const response = await fetch(`${API_URL}/qris-settings`);
-        const result = await response.json();
-        if (result.success) setQrisData(result.data);
-      } catch (error) {
-        console.error("Gagal ambil QRIS setting:", error);
-      }
-    };
-
     fetchOrder();
-    fetchQris();
-  }, [id]);
+  }, [id, navigate]);
 
   const handleConfirm = async () => {
     const isConfirmed = window.confirm("Apakah Anda yakin sudah melakukan transfer?");
     if (!isConfirmed) return;
 
     try {
-      // Update status di database menjadi 'dibayar'
-      const response = await fetch(`${API_URL}/pesanan/${id}`, {
+      // Update status menjadi 'Diproses' atau 'Menunggu Konfirmasi'
+      const response = await fetch(`${API_URL}/pesanan/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'dibayar' })
+        body: JSON.stringify({ status: 'Diproses' }) 
       });
       
       const result = await response.json();
       if (result.success) {
-        alert("✅ Pembayaran Berhasil Dikonfirmasi!");
-        navigate('/pesanan'); // Kembali ke halaman riwayat pesanan
+        alert("✅ Pembayaran Berhasil Dikonfirmasi! Tukang akan segera diproses.");
+        navigate('/riwayat-pesanan'); 
+      } else {
+        alert("Gagal update status: " + result.message);
       }
     } catch (error) {
-      alert("Gagal konfirmasi pembayaran.");
+      alert("Gagal konfirmasi pembayaran. Cek koneksi internet.");
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Memuat data pembayaran...</div>;
-  if (!order) return <div className="min-h-screen flex items-center justify-center">Pesanan tidak ditemukan.</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-500">Memuat data...</div>;
+  if (!order) return <div className="min-h-screen flex items-center justify-center text-red-500">Data pesanan tidak ditemukan.</div>;
 
-  // Harga Default (Misal belum diset di DB, kita pakai 150rb)
-  const totalHarga = order.harga || 150000;
+  // Harga Default (Misal belum diset di DB)
+  const totalHarga = 50000; // Biaya Survey / Default
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
@@ -110,16 +118,17 @@ const Pembayaran = () => {
             </div>
           </div>
 
-          {/* QR CODE IMAGE (Fixed) */}
+          {/* QR CODE IMAGE */}
           <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 mb-6 flex justify-center items-center relative flex-col">
+            {/* Saya ganti pakai link online supaya tidak error saat dicopy. Bisa diganti import local nanti */}
             <img 
-              src={qrisImage} 
-              alt="Scan QRIS DANA" 
-              className="w-56 h-auto object-contain hover:scale-105 transition duration-300" 
+              src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" 
+              alt="Scan QRIS" 
+              className="w-48 h-48 object-contain mix-blend-multiply" 
             />
-            <div className="mt-2 text-center">
-                <p className="text-xs font-bold text-slate-500">A.N. ASKAR MIN17</p>
-                <p className="text-[10px] text-slate-400">Scan menggunakan DANA / GoPay / OVO</p>
+            <div className="mt-4 text-center">
+                <p className="text-xs font-bold text-slate-500 uppercase">A.N. {qrisData.merchant_name}</p>
+                <p className="text-[10px] text-slate-400">Scan menggunakan DANA / GoPay / OVO / BCA</p>
             </div>
           </div>
 
@@ -129,11 +138,11 @@ const Pembayaran = () => {
                <Info className="w-4 h-4" /> Cara Pembayaran
             </h3>
             <ol className="text-xs text-blue-700 list-decimal list-inside space-y-1">
-                <li>Buka aplikasi GoPay/OVO/Dana/BCA</li>
+                <li>Buka aplikasi E-Wallet atau M-Banking</li>
                 <li>Scan QR Code di atas</li>
-                <li>Periksa nama merchant: <b>{qrisData?.merchant_name || 'HandyMan'}</b></li>
-                <li>Masukkan nominal sesuai tagihan</li>
-                <li>Klik tombol konfirmasi di bawah</li>
+                <li>Periksa nama merchant: <b>{qrisData.merchant_name}</b></li>
+                <li>Masukkan nominal <b>{formatRupiah(totalHarga)}</b></li>
+                <li>Klik tombol konfirmasi di bawah setelah berhasil</li>
             </ol>
           </div>
 
@@ -146,7 +155,7 @@ const Pembayaran = () => {
                 <CheckCircle className="w-5 h-5" /> Saya Sudah Membayar
             </button>
             <button 
-                onClick={() => navigate('/beranda')}
+                onClick={() => navigate('/riwayat-pesanan')}
                 className="w-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2"
             >
                 <ArrowLeft className="w-5 h-5" /> Bayar Nanti
@@ -156,7 +165,7 @@ const Pembayaran = () => {
           {/* FOOTER */}
           <div className="mt-8 pt-4 border-t border-slate-100 text-center">
              <p className="text-xs text-slate-400 flex justify-center items-center gap-1">
-               <Phone className="w-3 h-3" /> Bantuan: {qrisData?.merchant_phone || '0812-3456-7890'}
+               <Phone className="w-3 h-3" /> Bantuan: {qrisData.merchant_phone}
              </p>
           </div>
         </div>
