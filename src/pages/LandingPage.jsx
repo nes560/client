@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 // --- IMPORT LOGO BARU ---
 // Pastikan file gambar sudah disimpan di folder src/assets/
-import logoImage from '../assets/20251225_130015_0000.png';
+import logoImage from '../assets/logo.png';
 
 const LandingPage = () => {
   const navigate = useNavigate();

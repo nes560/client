@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-// Import fungsi bantuan dari api.js
 import { postData } from '../utils/api'; 
+
+// ✅ IMPORT GAMBAR LOCAL
+// Pastikan file bground.jpg ada di folder src/assets
+import bgImage from '../assets/bground.jpg'; 
 
 const Login = () => {
   const navigate = useNavigate();
   
-  // State untuk input
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
 
-  // State untuk loading & error
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -27,15 +28,11 @@ const Login = () => {
     setErrorMsg('');
 
     try {
-      // ✅ PERBAIKAN: Gunakan postData dan arahkan ke '/api/login'
       const result = await postData('/api/login', formData);
 
-      // Cek hasil dari backend
       if (result && result.success) {
-        // Simpan sesi user
         localStorage.setItem('user_session', JSON.stringify(result.user));
         
-        // Redirect sesuai tipe user
         if (result.user.tipe_pengguna === 'admin') {
             navigate('/admin');
         } else if (result.user.tipe_pengguna === 'tukang') {
@@ -45,7 +42,6 @@ const Login = () => {
         }
 
       } else {
-        // Jika Password Salah atau User tidak ditemukan
         setErrorMsg(result?.message || 'Login Gagal. Cek email & password.');
       }
 
@@ -58,16 +54,16 @@ const Login = () => {
   };
 
   return (
-    // ✅ PERBAIKAN: Syntax style ditutup dengan benar
     <div 
       className="min-h-screen w-full flex items-center justify-center bg-cover bg-center font-sans relative"
       style={{ 
-        backgroundImage: "url('https://img.freepik.com/free-vector/construction-blueprint-background_1284-11885.jpg?w=1800')",
+        // ✅ Menggunakan variabel gambar yang diimport
+        backgroundImage: `url(${bgImage})`,
       }}
     >
       
-      {/* Overlay Hitam */}
-      <div className="absolute inset-0 bg-black/50"></div>
+      {/* Overlay Hitam (Agar tulisan terbaca jelas) */}
+      <div className="absolute inset-0 bg-black/60"></div>
 
       {/* Tombol Kembali */}
       <button 
