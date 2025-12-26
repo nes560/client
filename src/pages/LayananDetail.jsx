@@ -32,7 +32,7 @@ ac: {
       title: "Service & Cuci AC",
       desc: "AC tidak dingin atau bocor? Jangan biarkan tagihan listrik membengkak. Cuci AC berkala bikin udara lebih sehat dan hemat energi.",
       // Image baru diganti di sini (menunjukkan teknisi sedang mencuci unit indoor)
-      image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=2070&auto=format&fit=crop",
+      image: "https://plus.unsplash.com/premium_photo-1682126012378-859ca7a9f4cf?q=80&w=1170&auto=format&fit=crop",
       price: "Mulai Rp 65.000 / unit",
       features: ["Garansi Dingin", "Isi Freon Berkualitas", "Teknisi Jujur & Sopan", "Anti Bocor Air"]
     }
