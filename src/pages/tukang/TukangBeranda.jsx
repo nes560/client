@@ -6,8 +6,10 @@ import {
   Power, Bell, Clock, ThumbsUp 
 } from 'lucide-react';
 
-// ✅ PERBAIKAN IMPORT (Mundur 2 langkah: ../../)
-import Sidebar from '../../components/Sidebar';
+// ❌ HAPUS IMPORT SIDEBAR & BOTTOMNAV KARENA SUDAH ADA DI LAYOUT
+// import Sidebar from '../../components/Sidebar'; <--- HAPUS
+// import BottomNav from '../../components/BottomNav'; <--- HAPUS
+
 import Footer from '../../components/Footer'; 
 import { API_URL } from '../../utils/api'; 
 
@@ -20,7 +22,7 @@ const TukangBeranda = () => {
   const [orders, setOrders] = useState([]); 
   const [loading, setLoading] = useState(true);
 
-  // 1. Load User & Data Pesanan
+  // ... (Logika useEffect Fetch Data TETAP SAMA, tidak perlu diubah) ...
   useEffect(() => {
     const session = JSON.parse(localStorage.getItem('user_session'));
     if (!session) {
@@ -33,11 +35,8 @@ const TukangBeranda = () => {
         try {
             const response = await fetch(`${API_URL}/pesanan`); 
             const result = await response.json();
-
             if (result.success) {
-                // Filter hanya pesanan milik tukang ini
                 const myOrders = result.data.filter(o => o.id_tukang === session.id);
-                
                 const formattedOrders = myOrders.map(o => ({
                     id: o.id,
                     customer: o.nama_pelanggan || "Pelanggan", 
@@ -49,7 +48,6 @@ const TukangBeranda = () => {
                     rating: o.rating ? parseInt(o.rating) : 0, 
                     ulasan: o.ulasan || "" 
                 }));
-
                 setOrders(formattedOrders);
             }
         } catch (error) {
@@ -59,19 +57,16 @@ const TukangBeranda = () => {
             setLoading(false);
         }
     };
-
     fetchOrders();
   }, [navigate]);
 
-  // Statistik
+  // ... (Logika Stats & Handler TETAP SAMA) ...
   const stats = [
     { label: 'Pendapatan', value: 'Rp 150rb', icon: Wallet, color: 'bg-green-100 text-green-600' },
     { label: 'Rating', value: '4.8', icon: Star, color: 'bg-amber-100 text-amber-600' },
     { label: 'Selesai', value: `${orders.filter(o => o.status === 'selesai').length} Job`, icon: CheckCircle, color: 'bg-blue-100 text-blue-600' },
   ];
-
   const filteredOrders = orders.filter(o => o.status === activeTab);
-
   const handleStatusToggle = () => {
     setIsOnline(!isOnline);
     toast.success(isOnline ? "Mode Istirahat (Offline)" : "Anda Online! Siap terima order.");
@@ -80,14 +75,12 @@ const TukangBeranda = () => {
   if (!user || loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-400">Memuat Dashboard...</div>;
 
   return (
-    <div className="max-w-7xl mx-auto min-h-screen font-sans text-slate-800 bg-slate-50 relative md:flex">
+    // ❌ HAPUS STRUKTUR FLEX SIDEBAR LAMA
+    // Cukup gunakan div container biasa karena Layout yang mengatur wrapper-nya
+    <div className="animate-fade-in pb-24 md:pb-8"> 
       
-      <Sidebar />
-
-      <main className="flex-1 min-h-screen relative overflow-x-hidden">
-        
         {/* HEADER */}
-        <div className="bg-white p-6 md:p-8 border-b border-slate-100 sticky top-0 z-30">
+        <div className="bg-white p-6 md:p-8 border-b border-slate-100 sticky top-0 z-30 shadow-sm md:shadow-none">
            <div className="flex justify-between items-start">
               <div>
                  <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Area Kerja: Malang Kota</p>
@@ -124,7 +117,7 @@ const TukangBeranda = () => {
         </div>
 
         {/* KONTEN UTAMA */}
-        <div className="p-6 md:p-8 pb-32">
+        <div className="p-6 md:p-8">
            
            {/* Tab Navigasi */}
            <div className="flex gap-2 mb-6 bg-slate-200 p-1 rounded-xl w-fit overflow-x-auto">
@@ -133,10 +126,11 @@ const TukangBeranda = () => {
               <TabButton active={activeTab === 'selesai'} onClick={()=>setActiveTab('selesai')} label="Riwayat" />
            </div>
 
-           {/* List Pesanan Real */}
-           <div className="space-y-4 animate-fade-in">
+           {/* List Pesanan */}
+           <div className="space-y-4">
               {filteredOrders.length > 0 ? (
                  filteredOrders.map((job) => (
+                    // ... (Kode Mapping Card Order TETAP SAMA) ...
                     <div key={job.id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-lg hover:border-blue-200 transition-all">
                        <div className="flex justify-between items-start mb-4">
                           <div className="flex gap-3 items-center">
@@ -150,7 +144,6 @@ const TukangBeranda = () => {
                                 </p>
                              </div>
                           </div>
-                          
                           <span className={`text-xs font-bold px-3 py-1 rounded-full border ${job.status === 'selesai' ? 'bg-slate-100 text-slate-500' : 'bg-green-50 text-green-700 border-green-100'}`}>
                               {job.status === 'selesai' ? 'Selesai' : job.price}
                           </span>
@@ -167,7 +160,7 @@ const TukangBeranda = () => {
                           </div>
                        </div>
 
-                       {/* TAMPILAN ULASAN DARI DB */}
+                       {/* Ulasan */}
                        {job.status === 'selesai' && job.rating > 0 ? (
                            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mt-4">
                                <div className="flex items-center gap-2 mb-2">
@@ -176,27 +169,18 @@ const TukangBeranda = () => {
                                            <Star key={i} size={16} fill={i < job.rating ? "currentColor" : "none"} className={i < job.rating ? "" : "text-amber-200"} />
                                        ))}
                                    </div>
-                                   <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
-                                       {job.rating}/5
-                                   </span>
+                                   <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">{job.rating}/5</span>
                                </div>
-                               <p className="text-sm text-slate-700 italic">
-                                   "{job.ulasan && job.ulasan !== "" ? job.ulasan : "Pelanggan memberikan rating tanpa ulasan tertulis."}"
-                               </p>
-                               <div className="flex items-center gap-1 mt-2 text-[10px] text-amber-600 font-bold uppercase tracking-wide">
-                                   <ThumbsUp size={12} /> Ulasan Pelanggan
-                               </div>
+                               <p className="text-sm text-slate-700 italic">"{job.ulasan || "Tidak ada ulasan."}"</p>
                            </div>
                        ) : job.status === 'selesai' ? (
-                           <p className="text-xs text-slate-400 italic text-center mt-2">Belum ada ulasan untuk pekerjaan ini.</p>
+                           <p className="text-xs text-slate-400 italic text-center mt-2">Belum ada ulasan.</p>
                        ) : null}
 
                        {/* Tombol Aksi */}
                        {job.status !== 'selesai' && (
                            <div className="grid grid-cols-2 gap-3 mt-4">
-                              <button className="py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition">
-                                 Abaikan
-                              </button>
+                              <button className="py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition">Abaikan</button>
                               <button className="py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 transition">
                                  {job.status === 'baru' ? 'Terima Job' : 'Selesaikan'}
                               </button>
@@ -215,15 +199,16 @@ const TukangBeranda = () => {
            </div>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-8 px-6">
             <Footer variant="light" />
         </div>
-
-      </main>
+        
+        {/* ❌ TIDAK ADA BOTTOM NAV DI SINI LAGI */}
     </div>
   );
 };
 
+// Komponen TabButton tetap sama
 const TabButton = ({ active, onClick, label, count }) => (
   <button 
     onClick={onClick}

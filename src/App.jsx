@@ -3,20 +3,24 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 // === IMPORT HALAMAN USER (PELANGGAN) ===
-import Home from './pages/Home';
+import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Home from './pages/Home';
 import Pesanan from './pages/Pesanan';
-import RiwayatPesanan from './pages/RiwayatPesanan'; // ✅ Rute Baru untuk Review
+import RiwayatPesanan from './pages/RiwayatPesanan';
 import Chat from './pages/Chat';
 import Profil from './pages/Profil';
-import LandingPage from './pages/LandingPage';
 import LayananDetail from './pages/LayananDetail';
 import Pembayaran from './pages/Pembayaran';
 
 // === IMPORT HALAMAN TUKANG (MITRA) ===
-import TukangLayout from './components/TukangLayout';
+// Pastikan file TukangLayout berada di folder yang benar (components atau layouts)
+import TukangLayout from './components/TukangLayout'; 
 import TukangBeranda from './pages/tukang/TukangBeranda';
+
+// Pastikan Anda sudah membuat file-file dummy ini jika belum ada isinya,
+// atau komentari dulu baris import ini agar tidak error.
 import TukangOrderan from './pages/tukang/TukangOrderan';
 import TukangAkun from './pages/tukang/TukangAkun';
 import TukangNotifikasi from './pages/tukang/TukangNotifikasi';
@@ -28,42 +32,41 @@ import AdminDashboard from './AdminDashboard';
 function App() {
   return (
     <Router>
-      {/* Notifikasi Global */}
+      {/* Notifikasi Toast Global */}
       <Toaster position="top-center" reverseOrder={false} />
 
       <Routes>
-        {/* ========================================= */}
-        {/* RUTE USER (PELANGGAN)                     */}
-        {/* ========================================= */}
         
-        {/* Halaman Depan & Auth */}
+        {/* ========================================= */}
+        {/* 1. PUBLIC ROUTES (Tanpa Login/Umum)       */}
+        {/* ========================================= */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        
-        {/* Halaman Utama User */}
+
+        {/* ========================================= */}
+        {/* 2. RUTE USER (PELANGGAN)                  */}
+        {/* ========================================= */}
+        {/* Halaman ini berdiri sendiri karena sudah import Sidebar/BottomNav di dalamnya */}
         <Route path="/beranda" element={<Home />} />
-        
-        {/* Fitur Utama User */}
         <Route path="/pesanan" element={<Pesanan />} />
-        <Route path="/riwayat-pesanan" element={<RiwayatPesanan />} /> {/* ✅ Halaman Riwayat & Review */}
+        <Route path="/riwayat-pesanan" element={<RiwayatPesanan />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/profil" element={<Profil />} />
-        
-        {/* Detail & Pembayaran */}
         <Route path="/layanan/:slug" element={<LayananDetail />} />
         <Route path="/pembayaran/:id" element={<Pembayaran />} />
 
-
         {/* ========================================= */}
-        {/* RUTE TUKANG (MITRA)                       */}
+        {/* 3. RUTE TUKANG (MITRA)                    */}
         {/* ========================================= */}
+        {/* Semua halaman tukang dibungkus TukangLayout agar Sidebar-nya Konsisten */}
         <Route path="/tukang" element={<TukangLayout />}>
-            {/* Redirect default ke TukangBeranda (Tampilan Mobile) */}
-            <Route index element={<TukangBeranda />} /> 
             
-            <Route path="beranda" element={<TukangBeranda />} /> 
+            {/* Jika buka /tukang, langsung ke Beranda */}
+            <Route index element={<TukangBeranda />} />
             
+            {/* Sub-menu Tukang */}
+            <Route path="beranda" element={<TukangBeranda />} />
             <Route path="orderan" element={<TukangOrderan />} />
             <Route path="chat" element={<TukangChat />} />
             <Route path="akun" element={<TukangAkun />} />
@@ -71,7 +74,7 @@ function App() {
         </Route>
 
         {/* ========================================= */}
-        {/* RUTE ADMIN (PUSAT KONTROL)                */}
+        {/* 4. RUTE ADMIN (PUSAT KONTROL)             */}
         {/* ========================================= */}
         <Route path="/admin" element={<AdminDashboard />} />
         
