@@ -4,7 +4,7 @@ import { postData } from '../utils/api';
 
 // ✅ IMPORT GAMBAR LOCAL
 // Pastikan file bground.jpg ada di folder src/assets
-import bgImage from '../assets/bground.jpg'; 
+//import bgImage from '../assets/bground.jpg'; 
 
 const Login = () => {
   const navigate = useNavigate();
@@ -58,8 +58,7 @@ const Login = () => {
       className="min-h-screen w-full flex items-center justify-center bg-cover bg-center font-sans relative"
       style={{ 
         // ✅ Menggunakan variabel gambar yang diimport
-        backgroundImage: `url(${bgImage})`,
-      }}
+        backgroundImage: `url({https://media.istockphoto.com/id/1189397952/id/foto/alat-mobil-di-dinding-garasi-mekanik-otomatis-dengan-dinding-alat-bengkel-konsep-perbaikan.jpg?s=1024x1024&w=is&k=20&c=vCMOep3wjrxSAuBzOHiVEPNZRJfLONjO4kenlPIduyM=})`}}
     >
       
       {/* Overlay Hitam (Agar tulisan terbaca jelas) */}
