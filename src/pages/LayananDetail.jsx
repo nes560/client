@@ -28,10 +28,11 @@ const LayananDetail = () => {
       price: "Mulai Rp 35.000 / meter",
       features: ["Bebas Konsultasi Warna", "Termasuk Perbaikan Tembok Retak", "Jaminan Cat Tidak Belang", "Pengerjaan Tepat Waktu"]
     },
-    ac: {
+ac: {
       title: "Service & Cuci AC",
       desc: "AC tidak dingin atau bocor? Jangan biarkan tagihan listrik membengkak. Cuci AC berkala bikin udara lebih sehat dan hemat energi.",
-      image: "https://images.unsplash.com/photo-1621905252507-b35a83013d28?q=80&w=2069&auto=format&fit=crop",
+      // Image baru diganti di sini (menunjukkan teknisi sedang mencuci unit indoor)
+      image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=2070&auto=format&fit=crop",
       price: "Mulai Rp 65.000 / unit",
       features: ["Garansi Dingin", "Isi Freon Berkualitas", "Teknisi Jujur & Sopan", "Anti Bocor Air"]
     }
