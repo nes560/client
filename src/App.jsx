@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast'; // ✅ 1. IMPORT TOASTER AGAR NOTIFIKASI MUNCUL
 
 // === IMPORT HALAMAN USER (PELANGGAN) ===
 import Home from './pages/Home';
@@ -14,19 +15,22 @@ import Pembayaran from './pages/Pembayaran';
 
 // === IMPORT HALAMAN TUKANG (MITRA) ===
 import TukangLayout from './components/TukangLayout';
-import TukangBeranda from './pages/tukang/TukangBeranda';
+import TukangBeranda from './pages/tukang/TukangBeranda'; // Pastikan file ini ada (dulu namanya TukangDashboard)
+import TukangDashboard from './pages/tukang/TukangDashboard'; // Menggunakan file Dashboard yang baru kita update
 import TukangOrderan from './pages/tukang/TukangOrderan';
 import TukangAkun from './pages/tukang/TukangAkun';
 import TukangNotifikasi from './pages/tukang/TukangNotifikasi';
-import TukangChat from './pages/tukang/TukangChat'; // <--- FILE BARU (CHAT MITRA)
+import TukangChat from './pages/tukang/TukangChat'; 
 
 // === IMPORT HALAMAN ADMIN ===
-// Pastikan file AdminDashboard.jsx ada di folder src
 import AdminDashboard from './AdminDashboard'; 
 
 function App() {
   return (
     <Router>
+      {/* ✅ 2. PASANG KOMPONEN TOASTER DI SINI (GLOBAL) */}
+      <Toaster position="top-center" reverseOrder={false} />
+
       <Routes>
         {/* ========================================= */}
         {/* RUTE USER (PELANGGAN)                     */}
@@ -53,16 +57,15 @@ function App() {
         {/* ========================================= */}
         {/* RUTE TUKANG (MITRA)                       */}
         {/* ========================================= */}
+        {/* Note: Kita arahkan /tukang ke TukangDashboard yang baru */}
         <Route path="/tukang" element={<TukangLayout />}>
-            {/* Redirect default /tukang ke beranda */}
-            <Route index element={<TukangBeranda />} />
+            <Route index element={<TukangDashboard />} /> 
             
-            <Route path="beranda" element={<TukangBeranda />} />
+            <Route path="beranda" element={<TukangDashboard />} /> 
+            <Route path="dashboard" element={<TukangDashboard />} />
+            
             <Route path="orderan" element={<TukangOrderan />} />
-            
-            {/* RUTE BARU: CHAT MITRA KE ADMIN */}
             <Route path="chat" element={<TukangChat />} />
-            
             <Route path="akun" element={<TukangAkun />} />
             <Route path="notifikasi" element={<TukangNotifikasi />} />
         </Route>
