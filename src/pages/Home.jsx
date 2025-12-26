@@ -315,14 +315,14 @@ const Home = () => {
             </div>
         )}
 
-        {/* ✅ FOOTER DI SINI (Muncul di semua Tampilan/Tab) */}
+        {/* ✅ FOOTER DI SINI (Dengan variant light agar background putih) */}
         <div className="mt-8">
-           <Footer />
+           <Footer variant="light" />
         </div>
 
       </main>
 
-      {/* ✅ BOTTOM NAV (Tanpa props setView karena sudah pakai router) */}
+      {/* ✅ BOTTOM NAV */}
       <BottomNav />
       
     </div>

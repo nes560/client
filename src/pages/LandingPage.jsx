@@ -226,7 +226,8 @@ const LandingPage = () => {
 
       {/* ✅ GANTI FOOTER LAMA DENGAN COMPONENT BARU */}
       <div className="relative z-20">
-         <Footer />
+         {/* Gunakan variant="dark" agar background hitam sesuai tema Landing Page */}
+         <Footer variant="dark" />
       </div>
 
     </div>
