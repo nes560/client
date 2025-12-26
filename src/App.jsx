@@ -1,12 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast'; // ✅ 1. IMPORT TOASTER
+import { Toaster } from 'react-hot-toast';
 
 // === IMPORT HALAMAN USER (PELANGGAN) ===
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Pesanan from './pages/Pesanan';
+import RiwayatPesanan from './pages/RiwayatPesanan'; // ✅ Rute Baru untuk Review
 import Chat from './pages/Chat';
 import Profil from './pages/Profil';
 import LandingPage from './pages/LandingPage';
@@ -15,7 +16,7 @@ import Pembayaran from './pages/Pembayaran';
 
 // === IMPORT HALAMAN TUKANG (MITRA) ===
 import TukangLayout from './components/TukangLayout';
-import TukangBeranda from './pages/tukang/TukangBeranda'; // ✅ Gunakan file Beranda yang sudah kita perbaiki
+import TukangBeranda from './pages/tukang/TukangBeranda';
 import TukangOrderan from './pages/tukang/TukangOrderan';
 import TukangAkun from './pages/tukang/TukangAkun';
 import TukangNotifikasi from './pages/tukang/TukangNotifikasi';
@@ -27,7 +28,7 @@ import AdminDashboard from './AdminDashboard';
 function App() {
   return (
     <Router>
-      {/* ✅ 2. TOASTER GLOBAL UNTUK NOTIFIKASI */}
+      {/* Notifikasi Global */}
       <Toaster position="top-center" reverseOrder={false} />
 
       <Routes>
@@ -45,6 +46,7 @@ function App() {
         
         {/* Fitur Utama User */}
         <Route path="/pesanan" element={<Pesanan />} />
+        <Route path="/riwayat-pesanan" element={<RiwayatPesanan />} /> {/* ✅ Halaman Riwayat & Review */}
         <Route path="/chat" element={<Chat />} />
         <Route path="/profil" element={<Profil />} />
         
@@ -57,13 +59,10 @@ function App() {
         {/* RUTE TUKANG (MITRA)                       */}
         {/* ========================================= */}
         <Route path="/tukang" element={<TukangLayout />}>
-            {/* ✅ Redirect default ke TukangBeranda (Tampilan Mobile) */}
+            {/* Redirect default ke TukangBeranda (Tampilan Mobile) */}
             <Route index element={<TukangBeranda />} /> 
             
             <Route path="beranda" element={<TukangBeranda />} /> 
-            
-            {/* Opsional: Dashboard Desktop jika masih dibutuhkan */}
-            {/* <Route path="dashboard" element={<TukangDashboard />} /> */}
             
             <Route path="orderan" element={<TukangOrderan />} />
             <Route path="chat" element={<TukangChat />} />

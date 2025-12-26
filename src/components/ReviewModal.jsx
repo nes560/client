@@ -1,28 +1,38 @@
 import React, { useState } from 'react';
 import { Star, X } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { postData } from '../utils/api'; // Pastikan path utility api benar
 
 const ReviewModal = ({ orderId, onClose, onSuccess }) => {
+  // URL Backend
+  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
+
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [review, setReview] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (rating === 0) return toast.error("Mohon berikan bintang");
+    if (rating === 0) return toast.error("Mohon berikan bintang minimal 1");
     
     setIsSubmitting(true);
     try {
-      // Kirim ke Backend (Pastikan backend punya endpoint ini)
-      const result = await postData(`/api/pesanan/${orderId}/review`, {
-        rating,
-        ulasan: review
+      // POST ke endpoint review
+      const response = await fetch(`${API_URL}/pesanan/${orderId}/review`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            rating: rating,
+            ulasan: review
+        })
       });
+
+      const result = await response.json();
 
       if (result.success) {
         toast.success("Terima kasih atas ulasan Anda!");
-        onSuccess(); // Refresh data di halaman induk
+        onSuccess(); // Refresh data halaman sebelumnya
         onClose();   // Tutup modal
       } else {
         toast.error("Gagal mengirim ulasan");
@@ -37,16 +47,19 @@ const ReviewModal = ({ orderId, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      {/* Backdrop Gelap */}
+      {/* Backdrop Gelap (Klik untuk tutup) */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
       
-      {/* Modal Content */}
+      {/* Konten Modal */}
       <div className="bg-white rounded-3xl p-6 w-full max-w-sm relative z-10 animate-fade-in shadow-2xl">
         <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
           <X size={24} />
         </button>
 
         <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-3">
+             <Star size={32} className="text-yellow-500 fill-yellow-500" />
+          </div>
           <h3 className="text-xl font-bold text-slate-800">Bagaimana Hasilnya?</h3>
           <p className="text-slate-500 text-sm">Beri nilai untuk kinerja Tukang</p>
         </div>
@@ -70,7 +83,7 @@ const ReviewModal = ({ orderId, onClose, onSuccess }) => {
           ))}
         </div>
 
-        {/* TEXT AREA ULASAN */}
+        {/* INPUT ULASAN */}
         <textarea
           className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 text-slate-700"
           rows="3"
