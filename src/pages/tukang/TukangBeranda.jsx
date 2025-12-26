@@ -6,10 +6,10 @@ import {
   Power, Bell, Clock, ThumbsUp 
 } from 'lucide-react';
 
-// ❌ HAPUS IMPORT SIDEBAR & BOTTOMNAV KARENA SUDAH ADA DI LAYOUT
-// import Sidebar from '../../components/Sidebar'; <--- HAPUS
-// import BottomNav from '../../components/BottomNav'; <--- HAPUS
+// ❌ HAPUS import Sidebar agar tidak ganda
+// import Sidebar from '../../components/Sidebar'; 
 
+// ✅ Footer tetap dipakai di bawah konten
 import Footer from '../../components/Footer'; 
 import { API_URL } from '../../utils/api'; 
 
@@ -22,7 +22,7 @@ const TukangBeranda = () => {
   const [orders, setOrders] = useState([]); 
   const [loading, setLoading] = useState(true);
 
-  // ... (Logika useEffect Fetch Data TETAP SAMA, tidak perlu diubah) ...
+  // --- LOGIKA LOAD DATA (TIDAK BERUBAH) ---
   useEffect(() => {
     const session = JSON.parse(localStorage.getItem('user_session'));
     if (!session) {
@@ -60,13 +60,13 @@ const TukangBeranda = () => {
     fetchOrders();
   }, [navigate]);
 
-  // ... (Logika Stats & Handler TETAP SAMA) ...
   const stats = [
     { label: 'Pendapatan', value: 'Rp 150rb', icon: Wallet, color: 'bg-green-100 text-green-600' },
     { label: 'Rating', value: '4.8', icon: Star, color: 'bg-amber-100 text-amber-600' },
     { label: 'Selesai', value: `${orders.filter(o => o.status === 'selesai').length} Job`, icon: CheckCircle, color: 'bg-blue-100 text-blue-600' },
   ];
   const filteredOrders = orders.filter(o => o.status === activeTab);
+
   const handleStatusToggle = () => {
     setIsOnline(!isOnline);
     toast.success(isOnline ? "Mode Istirahat (Offline)" : "Anda Online! Siap terima order.");
@@ -75,11 +75,11 @@ const TukangBeranda = () => {
   if (!user || loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-400">Memuat Dashboard...</div>;
 
   return (
-    // ❌ HAPUS STRUKTUR FLEX SIDEBAR LAMA
-    // Cukup gunakan div container biasa karena Layout yang mengatur wrapper-nya
-    <div className="animate-fade-in pb-24 md:pb-8"> 
+    // ❌ HAPUS wrapper "md:flex" dan "<Sidebar />" di sini
+    // ✅ Cukup gunakan div biasa, karena layout sudah diatur oleh TukangLayout.jsx
+    <div className="animate-fade-in"> 
       
-        {/* HEADER */}
+        {/* HEADER DASHBOARD */}
         <div className="bg-white p-6 md:p-8 border-b border-slate-100 sticky top-0 z-30 shadow-sm md:shadow-none">
            <div className="flex justify-between items-start">
               <div>
@@ -130,7 +130,6 @@ const TukangBeranda = () => {
            <div className="space-y-4">
               {filteredOrders.length > 0 ? (
                  filteredOrders.map((job) => (
-                    // ... (Kode Mapping Card Order TETAP SAMA) ...
                     <div key={job.id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-lg hover:border-blue-200 transition-all">
                        <div className="flex justify-between items-start mb-4">
                           <div className="flex gap-3 items-center">
@@ -199,16 +198,15 @@ const TukangBeranda = () => {
            </div>
         </div>
 
+        {/* Footer Tetap Ada */}
         <div className="mt-8 px-6">
             <Footer variant="light" />
         </div>
         
-        {/* ❌ TIDAK ADA BOTTOM NAV DI SINI LAGI */}
     </div>
   );
 };
 
-// Komponen TabButton tetap sama
 const TabButton = ({ active, onClick, label, count }) => (
   <button 
     onClick={onClick}
