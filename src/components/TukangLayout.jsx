@@ -6,7 +6,6 @@ const TukangLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Fungsi Logout
   const handleLogout = () => {
     if (window.confirm('Akhiri sesi kerja?')) {
       localStorage.removeItem('user_session');
@@ -14,7 +13,6 @@ const TukangLayout = () => {
     }
   };
 
-  // Helper untuk mengecek menu aktif
   const isActive = (path) => location.pathname === path;
 
   return (
@@ -22,7 +20,6 @@ const TukangLayout = () => {
       
       {/* === SIDEBAR DESKTOP === */}
       <aside className="hidden md:flex flex-col w-72 bg-white border-r border-slate-100 h-full p-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-40 transition-all duration-300">
-        {/* Logo Section */}
         <div className="flex items-center gap-3 mb-10 px-2">
           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
             <Wrench size={20} strokeWidth={2.5} />
@@ -35,7 +32,6 @@ const TukangLayout = () => {
           </div>
         </div>
 
-        {/* Navigation Menu */}
         <nav className="space-y-1.5 flex-1">
           <p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Menu Utama</p>
           <SidebarItem icon={<Home size={20}/>} label="Dashboard" path="/tukang/beranda" active={isActive('/tukang/beranda')} onClick={() => navigate('/tukang/beranda')} />
@@ -47,7 +43,6 @@ const TukangLayout = () => {
           <SidebarItem icon={<User size={20}/>} label="Akun Saya" path="/tukang/akun" active={isActive('/tukang/akun')} onClick={() => navigate('/tukang/akun')} />
         </nav>
 
-        {/* Logout Button */}
         <div className="pt-4 border-t border-slate-50 mt-auto">
           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl font-medium transition-all duration-200 group">
             <LogOut size={20} className="group-hover:stroke-red-600 transition-colors" /> 
@@ -56,26 +51,27 @@ const TukangLayout = () => {
         </div>
       </aside>
 
-      {/* === AREA KONTEN UTAMA === */}
+      {/* === AREA KONTEN UTAMA (YANG DIPERBAIKI) === */}
       <main className="flex-1 relative md:bg-slate-100 md:overflow-y-auto">
-        {/* Container Mobile-Look di Desktop */}
-        <div className="w-full md:max-w-[480px] mx-auto bg-slate-50 min-h-screen relative flex flex-col md:shadow-2xl md:shadow-slate-200/50 md:border-x md:border-white">
+        
+        {/* ✅ PERBAIKAN DI SINI: */}
+        {/* Hapus 'max-w-[480px]' agar konten melebar (Full Width) */}
+        {/* Hapus border & shadow agar menyatu dengan background */}
+        <div className="w-full min-h-screen relative flex flex-col">
             
-            {/* Tempat Halaman Anak Muncul */}
+            {/* Outlet akan mengisi sisa ruang secara penuh */}
             <Outlet />
             
-            {/* Spacer untuk Bottom Nav di Mobile agar konten paling bawah tidak tertutup */}
             <div className="h-24 md:h-0"></div>
         </div>
       </main>
 
-      {/* === NAVIGASI MOBILE (BOTTOM BAR) === */}
+      {/* === NAVIGASI MOBILE === */}
       <div className="md:hidden fixed bottom-5 left-1/2 transform -translate-x-1/2 w-[92%] max-w-sm z-50">
         <div className="bg-white/90 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-2xl px-6 py-3 flex justify-between items-center ring-1 ring-slate-900/5">
-          <MobileNavItem icon={Home} label="Home" active={isActive('/tukang/beranda')} onClick={() => navigate('/tukang/beranda')} />
-          <MobileNavItem icon={ClipboardList} label="Order" active={isActive('/tukang/orderan')} onClick={() => navigate('/tukang/orderan')} />
+          <MobileNavItem icon={Home} active={isActive('/tukang/beranda')} onClick={() => navigate('/tukang/beranda')} />
+          <MobileNavItem icon={ClipboardList} active={isActive('/tukang/orderan')} onClick={() => navigate('/tukang/orderan')} />
           
-          {/* Tombol Chat (Tengah & Menonjol) */}
           <button 
              onClick={() => navigate('/tukang/chat')}
              className={`relative -top-5 p-4 rounded-full shadow-lg shadow-blue-500/30 transition-transform duration-300 ${
@@ -85,8 +81,8 @@ const TukangLayout = () => {
              <MessageSquare size={24} strokeWidth={2.5} />
           </button>
 
-          <MobileNavItem icon={Bell} label="Notif" active={isActive('/tukang/notifikasi')} onClick={() => navigate('/tukang/notifikasi')} />
-          <MobileNavItem icon={User} label="Akun" active={isActive('/tukang/akun')} onClick={() => navigate('/tukang/akun')} />
+          <MobileNavItem icon={Bell} active={isActive('/tukang/notifikasi')} onClick={() => navigate('/tukang/notifikasi')} />
+          <MobileNavItem icon={User} active={isActive('/tukang/akun')} onClick={() => navigate('/tukang/akun')} />
         </div>
       </div>
 
@@ -94,9 +90,7 @@ const TukangLayout = () => {
   );
 };
 
-// --- KOMPONEN KECIL ---
-
-// 1. Sidebar Item Desktop (Lebih Elegan)
+// Komponen Kecil
 const SidebarItem = ({ icon, label, active, onClick }) => (
   <button 
     onClick={onClick} 
@@ -106,20 +100,12 @@ const SidebarItem = ({ icon, label, active, onClick }) => (
         : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
     }`}
   >
-    {/* Ikon */}
-    <span className={`transition-colors duration-300 ${active ? 'text-white' : 'text-slate-400 group-hover:text-blue-600'}`}>
-        {icon}
-    </span>
-    
-    {/* Label */}
+    <span className={`transition-colors duration-300 ${active ? 'text-white' : 'text-slate-400 group-hover:text-blue-600'}`}>{icon}</span>
     <span className="relative z-10">{label}</span>
-    
-    {/* Indikator Active (Dot kecil di kanan) */}
     {active && <span className="absolute right-4 w-1.5 h-1.5 bg-white rounded-full opacity-50"></span>}
   </button>
 );
 
-// 2. Mobile Nav Item (Animasi Lompat)
 const MobileNavItem = ({ icon: Icon, active, onClick }) => (
   <button 
     onClick={onClick} 
@@ -132,9 +118,7 @@ const MobileNavItem = ({ icon: Icon, active, onClick }) => (
         strokeWidth={active ? 2.5 : 2}
         className={`transition-colors duration-300 ${active ? 'text-blue-600' : 'text-slate-400'}`} 
     />
-    {active && (
-        <span className="absolute -bottom-2 w-1 h-1 bg-blue-600 rounded-full"></span>
-    )}
+    {active && <span className="absolute -bottom-2 w-1 h-1 bg-blue-600 rounded-full"></span>}
   </button>
 );
 
