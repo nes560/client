@@ -5,24 +5,19 @@ import {
   Wallet, Star, CheckCircle, MapPin, 
   Power, Bell, Clock, ThumbsUp 
 } from 'lucide-react';
-
-// ❌ HAPUS import Sidebar agar tidak ganda
-// import Sidebar from '../../components/Sidebar'; 
-
-// ✅ Footer tetap dipakai di bawah konten
 import Footer from '../../components/Footer'; 
-import { API_URL } from '../../utils/api'; 
 
 const TukangBeranda = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('baru'); 
   const [isOnline, setIsOnline] = useState(true);
   const [user, setUser] = useState(null);
-  
   const [orders, setOrders] = useState([]); 
   const [loading, setLoading] = useState(true);
 
-  // --- LOGIKA LOAD DATA (TIDAK BERUBAH) ---
+  // ✅ DEFINISI API URL YANG BENAR (Pakai /api)
+  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
+
   useEffect(() => {
     const session = JSON.parse(localStorage.getItem('user_session'));
     if (!session) {
@@ -33,30 +28,42 @@ const TukangBeranda = () => {
 
     const fetchOrders = async () => {
         try {
+            // ✅ Fetch ke endpoint yang benar (/api/pesanan)
             const response = await fetch(`${API_URL}/pesanan`); 
+            
+            // Cek jika response bukan OK (misal 404 atau 500)
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
             const result = await response.json();
+
             if (result.success) {
+                // Filter pesanan milik tukang ini
                 const myOrders = result.data.filter(o => o.id_tukang === session.id);
+                
                 const formattedOrders = myOrders.map(o => ({
                     id: o.id,
-                    customer: o.nama_pelanggan || "Pelanggan", 
+                    customer: o.nama_pelanggan || o.nama_user || "Pelanggan", // Handle variasi nama kolom
                     address: o.alamat || "Lokasi tidak tersedia",
-                    problem: o.keluhan || "Detail pekerjaan belum diisi",
+                    problem: o.keluhan || o.deskripsi_masalah || "Detail pekerjaan belum diisi",
                     price: `Rp ${parseInt(o.harga || 0).toLocaleString('id-ID')}`,
                     time: new Date(o.created_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}),
                     status: o.status, 
                     rating: o.rating ? parseInt(o.rating) : 0, 
                     ulasan: o.ulasan || "" 
                 }));
+
                 setOrders(formattedOrders);
             }
         } catch (error) {
             console.error("Gagal ambil pesanan:", error);
-            toast.error("Gagal memuat data pesanan");
+            // Jangan spam toast error jika hanya masalah koneksi sementara
         } finally {
             setLoading(false);
         }
     };
+
     fetchOrders();
   }, [navigate]);
 
@@ -65,7 +72,15 @@ const TukangBeranda = () => {
     { label: 'Rating', value: '4.8', icon: Star, color: 'bg-amber-100 text-amber-600' },
     { label: 'Selesai', value: `${orders.filter(o => o.status === 'selesai').length} Job`, icon: CheckCircle, color: 'bg-blue-100 text-blue-600' },
   ];
-  const filteredOrders = orders.filter(o => o.status === activeTab);
+
+  // Filter pesanan berdasarkan tab status
+  // Mapping status frontend ke status database jika perlu
+  const filteredOrders = orders.filter(o => {
+      if (activeTab === 'baru') return o.status === 'Menunggu Konfirmasi' || o.status === 'baru';
+      if (activeTab === 'aktif') return o.status === 'Diproses' || o.status === 'aktif';
+      if (activeTab === 'selesai') return o.status === 'Selesai';
+      return false;
+  });
 
   const handleStatusToggle = () => {
     setIsOnline(!isOnline);
@@ -75,8 +90,6 @@ const TukangBeranda = () => {
   if (!user || loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-400">Memuat Dashboard...</div>;
 
   return (
-    // ❌ HAPUS wrapper "md:flex" dan "<Sidebar />" di sini
-    // ✅ Cukup gunakan div biasa, karena layout sudah diatur oleh TukangLayout.jsx
     <div className="animate-fade-in"> 
       
         {/* HEADER DASHBOARD */}
@@ -121,8 +134,8 @@ const TukangBeranda = () => {
            
            {/* Tab Navigasi */}
            <div className="flex gap-2 mb-6 bg-slate-200 p-1 rounded-xl w-fit overflow-x-auto">
-              <TabButton active={activeTab === 'baru'} onClick={()=>setActiveTab('baru')} label="Baru" count={orders.filter(o=>o.status==='baru').length} />
-              <TabButton active={activeTab === 'aktif'} onClick={()=>setActiveTab('aktif')} label="Proses" count={orders.filter(o=>o.status==='aktif').length} />
+              <TabButton active={activeTab === 'baru'} onClick={()=>setActiveTab('baru')} label="Baru" />
+              <TabButton active={activeTab === 'aktif'} onClick={()=>setActiveTab('aktif')} label="Proses" />
               <TabButton active={activeTab === 'selesai'} onClick={()=>setActiveTab('selesai')} label="Riwayat" />
            </div>
 
@@ -143,8 +156,8 @@ const TukangBeranda = () => {
                                 </p>
                              </div>
                           </div>
-                          <span className={`text-xs font-bold px-3 py-1 rounded-full border ${job.status === 'selesai' ? 'bg-slate-100 text-slate-500' : 'bg-green-50 text-green-700 border-green-100'}`}>
-                              {job.status === 'selesai' ? 'Selesai' : job.price}
+                          <span className={`text-xs font-bold px-3 py-1 rounded-full border ${job.status === 'Selesai' || job.status === 'selesai' ? 'bg-slate-100 text-slate-500' : 'bg-green-50 text-green-700 border-green-100'}`}>
+                              {job.status}
                           </span>
                        </div>
 
@@ -159,8 +172,8 @@ const TukangBeranda = () => {
                           </div>
                        </div>
 
-                       {/* Ulasan */}
-                       {job.status === 'selesai' && job.rating > 0 ? (
+                       {/* Ulasan (Hanya jika selesai) */}
+                       {(job.status === 'Selesai' || job.status === 'selesai') && job.rating > 0 ? (
                            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mt-4">
                                <div className="flex items-center gap-2 mb-2">
                                    <div className="flex text-amber-500">
@@ -172,16 +185,14 @@ const TukangBeranda = () => {
                                </div>
                                <p className="text-sm text-slate-700 italic">"{job.ulasan || "Tidak ada ulasan."}"</p>
                            </div>
-                       ) : job.status === 'selesai' ? (
-                           <p className="text-xs text-slate-400 italic text-center mt-2">Belum ada ulasan.</p>
                        ) : null}
 
                        {/* Tombol Aksi */}
-                       {job.status !== 'selesai' && (
+                       {job.status !== 'Selesai' && job.status !== 'selesai' && (
                            <div className="grid grid-cols-2 gap-3 mt-4">
                               <button className="py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition">Abaikan</button>
                               <button className="py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 transition">
-                                 {job.status === 'baru' ? 'Terima Job' : 'Selesaikan'}
+                                 {activeTab === 'baru' ? 'Terima Job' : 'Selesaikan'}
                               </button>
                            </div>
                        )}
@@ -198,7 +209,6 @@ const TukangBeranda = () => {
            </div>
         </div>
 
-        {/* Footer Tetap Ada */}
         <div className="mt-8 px-6">
             <Footer variant="light" />
         </div>
@@ -207,7 +217,7 @@ const TukangBeranda = () => {
   );
 };
 
-const TabButton = ({ active, onClick, label, count }) => (
+const TabButton = ({ active, onClick, label }) => (
   <button 
     onClick={onClick}
     className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
@@ -215,7 +225,6 @@ const TabButton = ({ active, onClick, label, count }) => (
     }`}
   >
     {label}
-    {count > 0 && <span className={`px-1.5 py-0.5 rounded text-[10px] ${active ? 'bg-blue-100' : 'bg-slate-300 text-white'}`}>{count}</span>}
   </button>
 );
 
