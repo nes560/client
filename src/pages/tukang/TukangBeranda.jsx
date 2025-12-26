@@ -1,239 +1,247 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wallet, Star, MapPin, Clock, Wrench, ChevronRight, Briefcase } from 'lucide-react';
-import toast from 'react-hot-toast'; 
-
-// --- KOMPONEN SKELETON (LOADING MOBILE) ---
-const BerandaSkeleton = () => (
-    <div className="p-6 md:p-0 space-y-6 animate-pulse">
-        {/* Header Skeleton */}
-        <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-slate-200 rounded-full"></div>
-            <div className="space-y-2">
-                <div className="h-3 w-24 bg-slate-200 rounded"></div>
-                <div className="h-5 w-40 bg-slate-200 rounded"></div>
-            </div>
-        </div>
-        {/* Card Saldo Skeleton */}
-        <div className="h-48 w-full bg-slate-200 rounded-3xl"></div>
-        {/* Card Job Skeleton */}
-        <div className="h-40 w-full bg-slate-200 rounded-3xl"></div>
-    </div>
-);
+import Sidebar from '../components/Sidebar';
+import Footer from '../components/Footer'; 
+import toast from 'react-hot-toast';
+import { API_URL } from '../utils/api'; // ✅ Import API URL
+import { 
+  Wallet, Star, CheckCircle, MapPin, 
+  Power, Bell, Clock, ThumbsUp 
+} from 'lucide-react';
 
 const TukangBeranda = () => {
   const navigate = useNavigate();
-  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
-
-  const [user, setUser] = useState({ nama_depan: 'Mitra', nama_belakang: '' });
-  const [activeJob, setActiveJob] = useState(null);
-  const [stats, setStats] = useState({
-      income: 0,
-      totalOrders: 0,
-      rating: 4.9 
-  });
+  const [activeTab, setActiveTab] = useState('baru'); 
+  const [isOnline, setIsOnline] = useState(true);
+  const [user, setUser] = useState(null);
+  
+  // ✅ Ganti Data Dummy dengan State Kosong
+  const [orders, setOrders] = useState([]); 
   const [loading, setLoading] = useState(true);
 
-  // Format Rupiah Helper
-  const formatRupiah = (number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency', currency: 'IDR', minimumFractionDigits: 0
-    }).format(number);
-  };
-
+  // 1. Load User & Data Pesanan
   useEffect(() => {
-    // A. Cek Sesi Login
-    try {
-        const session = JSON.parse(localStorage.getItem('user_session'));
-        if (session) {
-            setUser(session);
-        } else {
-            navigate('/login');
-        }
-    } catch (e) {
-        console.error("Gagal load sesi", e);
+    const session = JSON.parse(localStorage.getItem('user_session'));
+    if (!session) {
+        navigate('/login');
+        return;
     }
+    setUser(session);
 
-    // B. Ambil Data Pesanan dari API
-    const fetchData = async () => {
+    // ✅ FUNGSI FETCH DATA DARI API
+    const fetchOrders = async () => {
         try {
-            const response = await fetch(`${API_URL}/pesanan`);
+            // Asumsi endpoint: GET /pesanan/mitra/:id_tukang
+            // Sesuaikan endpoint ini dengan backend Anda, misal: `${API_URL}/pesanan` lalu difilter
+            const response = await fetch(`${API_URL}/pesanan`); 
             const result = await response.json();
 
             if (result.success) {
-                const allOrders = result.data;
-
-                // 1. LOGIKA PEKERJAAN AKTIF
-                const currentJob = allOrders
-                    .filter(o => o.status === 'Diproses')
-                    .sort((a, b) => b.id - a.id)[0];
+                // Filter hanya pesanan milik tukang ini
+                // Pastikan backend mengembalikan data: id_tukang, status, rating, ulasan
+                const myOrders = result.data.filter(o => o.id_tukang === session.id);
                 
-                setActiveJob(currentJob || null);
-
-                // 2. LOGIKA STATISTIK
-                const completedOrders = allOrders.filter(o => o.status === 'Selesai');
-                const totalIncome = completedOrders.reduce((acc, curr) => acc + (curr.harga || 50000), 0);
-
-                setStats(prev => ({
-                    ...prev,
-                    income: totalIncome,
-                    totalOrders: allOrders.length
+                // Format Data agar sesuai tampilan
+                const formattedOrders = myOrders.map(o => ({
+                    id: o.id,
+                    customer: o.nama_pelanggan || "Pelanggan", // Sesuaikan nama kolom DB
+                    address: o.alamat || "Lokasi tidak tersedia",
+                    problem: o.keluhan || "Detail pekerjaan belum diisi",
+                    price: `Rp ${parseInt(o.harga || 0).toLocaleString('id-ID')}`,
+                    time: new Date(o.created_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}),
+                    status: o.status, // pastikan value: 'baru', 'aktif', 'selesai'
+                    
+                    // ✅ AMBIL RATING & ULASAN ASLI DARI DB
+                    rating: o.rating ? parseInt(o.rating) : 0, 
+                    ulasan: o.ulasan || "" 
                 }));
+
+                setOrders(formattedOrders);
             }
         } catch (error) {
-            console.error("Gagal ambil data:", error);
-            toast.error("Gagal memuat data beranda");
+            console.error("Gagal ambil pesanan:", error);
+            toast.error("Gagal memuat data pesanan");
         } finally {
             setLoading(false);
         }
     };
 
-    fetchData();
+    fetchOrders();
   }, [navigate]);
 
+  // Statistik (Bisa dibuat dinamis juga nanti)
+  const stats = [
+    { label: 'Pendapatan', value: 'Rp 150rb', icon: Wallet, color: 'bg-green-100 text-green-600' },
+    { label: 'Rating', value: '4.8', icon: Star, color: 'bg-amber-100 text-amber-600' },
+    { label: 'Selesai', value: `${orders.filter(o => o.status === 'selesai').length} Job`, icon: CheckCircle, color: 'bg-blue-100 text-blue-600' },
+  ];
+
+  const filteredOrders = orders.filter(o => o.status === activeTab);
+
+  const handleStatusToggle = () => {
+    setIsOnline(!isOnline);
+    toast.success(isOnline ? "Mode Istirahat (Offline)" : "Anda Online! Siap terima order.");
+  };
+
+  // Render Loading jika data belum siap
+  if (!user || loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-400">Memuat Dashboard...</div>;
+
   return (
-    <div className="pb-24 md:pb-0">
+    <div className="max-w-7xl mx-auto min-h-screen font-sans text-slate-800 bg-slate-50 relative md:flex">
       
-      {/* Jika Loading, Tampilkan Skeleton */}
-      {loading ? (
-          <BerandaSkeleton />
-      ) : (
-          <div className="animate-fade-in">
-              {/* HEADER MOBILE */}
-              <div className="px-6 pt-8 pb-4 bg-white md:bg-transparent md:p-0 flex justify-between items-center sticky top-0 md:static z-30 border-b border-slate-100 md:border-none md:mb-6">
-                <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full p-0.5 border-2 border-blue-500 overflow-hidden">
-                        <img 
-                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.nama_depan}`} 
-                            alt="Profil" 
-                            className="w-full h-full bg-slate-200 object-cover" 
-                        />
+      <Sidebar />
+
+      <main className="flex-1 min-h-screen relative overflow-x-hidden">
+        
+        {/* HEADER */}
+        <div className="bg-white p-6 md:p-8 border-b border-slate-100 sticky top-0 z-30">
+           <div className="flex justify-between items-start">
+              <div>
+                 <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Area Kerja: Malang Kota</p>
+                 <h1 className="text-2xl font-bold text-slate-800">
+                    Semangat Pagi, <span className="text-blue-600">{user.nama_depan}! 🛠️</span>
+                 </h1>
+                 <p className="text-sm text-slate-500 mt-1">Spesialis: {user.keahlian || 'Umum'}</p>
+              </div>
+
+              <button 
+                onClick={handleStatusToggle}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm transition-all shadow-sm border ${
+                  isOnline ? 'bg-green-50 text-green-700 border-green-200' : 'bg-slate-100 text-slate-500 border-slate-200'
+                }`}
+              >
+                <Power size={16} />
+                {isOnline ? 'Siap Kerja' : 'Offline'}
+              </button>
+           </div>
+
+           <div className="grid grid-cols-3 gap-4 mt-8">
+              {stats.map((stat, idx) => (
+                 <div key={idx} className="bg-white p-3 md:p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
+                    <div className={`w-10 h-10 ${stat.color} rounded-xl flex items-center justify-center shrink-0`}>
+                       <stat.icon size={20} />
                     </div>
                     <div>
-                        <p className="text-xs text-slate-400 font-medium">Selamat Bekerja,</p>
-                        <h2 className="text-lg font-bold text-slate-800 leading-tight capitalize">{user.nama_depan} {user.nama_belakang}</h2>
+                       <p className="text-slate-400 text-[10px] font-bold uppercase">{stat.label}</p>
+                       <p className="text-sm md:text-xl font-bold text-slate-800 whitespace-nowrap">{stat.value}</p>
                     </div>
-                </div>
-              </div>
+                 </div>
+              ))}
+           </div>
+        </div>
 
-              <div className="p-6 md:p-0 space-y-6 md:grid md:grid-cols-2 md:gap-6 md:space-y-0">
-                
-                {/* KARTU SALDO & STATISTIK */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-6 text-white shadow-lg shadow-blue-200 relative overflow-hidden">
-                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
-                    <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <p className="text-blue-100 text-xs font-medium mb-1">Pendapatan (Selesai)</p>
-                                <h1 className="text-3xl font-bold tracking-tight">{formatRupiah(stats.income)}</h1>
-                            </div>
-                            <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
-                                <Wallet className="text-white" size={24} />
-                            </div>
-                        </div>
-                        <div className="flex gap-3">
-                            <div className="flex-1 bg-white/10 rounded-xl p-3 backdrop-blur-sm border border-white/10">
-                                <p className="text-[10px] text-blue-100 mb-1">Total Order</p>
-                                <p className="font-bold text-lg">{stats.totalOrders}</p>
-                            </div>
-                            <div className="flex-1 bg-white/10 rounded-xl p-3 backdrop-blur-sm border border-white/10">
-                                <p className="text-[10px] text-blue-100 mb-1">Rating</p>
-                                <p className="font-bold text-lg flex items-center gap-1">
-                                    {stats.rating} <Star size={14} className="text-yellow-400 fill-yellow-400" />
+        {/* KONTEN UTAMA */}
+        <div className="p-6 md:p-8 pb-32">
+           
+           {/* Tab Navigasi */}
+           <div className="flex gap-2 mb-6 bg-slate-200 p-1 rounded-xl w-fit overflow-x-auto">
+              <TabButton active={activeTab === 'baru'} onClick={()=>setActiveTab('baru')} label="Baru" count={orders.filter(o=>o.status==='baru').length} />
+              <TabButton active={activeTab === 'aktif'} onClick={()=>setActiveTab('aktif')} label="Proses" count={orders.filter(o=>o.status==='aktif').length} />
+              <TabButton active={activeTab === 'selesai'} onClick={()=>setActiveTab('selesai')} label="Riwayat" />
+           </div>
+
+           {/* List Pesanan Real */}
+           <div className="space-y-4 animate-fade-in">
+              {filteredOrders.length > 0 ? (
+                 filteredOrders.map((job) => (
+                    <div key={job.id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-lg hover:border-blue-200 transition-all">
+                       <div className="flex justify-between items-start mb-4">
+                          <div className="flex gap-3 items-center">
+                             <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold uppercase">
+                                {job.customer.charAt(0)}
+                             </div>
+                             <div>
+                                <h3 className="font-bold text-slate-800">{job.customer}</h3>
+                                <p className="text-xs text-slate-400 flex items-center gap-1">
+                                   <Clock size={12}/> {job.time}
                                 </p>
-                            </div>
-                        </div>
+                             </div>
+                          </div>
+                          
+                          <span className={`text-xs font-bold px-3 py-1 rounded-full border ${job.status === 'selesai' ? 'bg-slate-100 text-slate-500' : 'bg-green-50 text-green-700 border-green-100'}`}>
+                              {job.status === 'selesai' ? 'Selesai' : job.price}
+                          </span>
+                       </div>
+
+                       <div className="space-y-2 mb-5">
+                          <div className="flex items-start gap-2 text-sm text-slate-600">
+                             <MapPin size={16} className="text-red-500 mt-0.5 shrink-0" />
+                             <span className="font-medium">{job.address}</span>
+                          </div>
+                          <div className="flex items-start gap-2 text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                             <Bell size={16} className="text-amber-500 mt-0.5 shrink-0" />
+                             <span>"{job.problem}"</span>
+                          </div>
+                       </div>
+
+                       {/* ✅ TAMPILAN ULASAN DARI DB */}
+                       {job.status === 'selesai' && job.rating > 0 ? (
+                           <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mt-4">
+                               <div className="flex items-center gap-2 mb-2">
+                                   <div className="flex text-amber-500">
+                                       {[...Array(5)].map((_, i) => (
+                                           <Star key={i} size={16} fill={i < job.rating ? "currentColor" : "none"} className={i < job.rating ? "" : "text-amber-200"} />
+                                       ))}
+                                   </div>
+                                   <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+                                       {job.rating}/5
+                                   </span>
+                               </div>
+                               {/* Tampilkan ulasan jika ada, jika tidak tampilkan default */}
+                               <p className="text-sm text-slate-700 italic">
+                                   "{job.ulasan && job.ulasan !== "" ? job.ulasan : "Pelanggan memberikan rating tanpa ulasan tertulis."}"
+                               </p>
+                               <div className="flex items-center gap-1 mt-2 text-[10px] text-amber-600 font-bold uppercase tracking-wide">
+                                   <ThumbsUp size={12} /> Ulasan Pelanggan
+                               </div>
+                           </div>
+                       ) : job.status === 'selesai' ? (
+                           <p className="text-xs text-slate-400 italic text-center mt-2">Belum ada ulasan untuk pekerjaan ini.</p>
+                       ) : null}
+
+                       {/* Tombol Aksi */}
+                       {job.status !== 'selesai' && (
+                           <div className="grid grid-cols-2 gap-3 mt-4">
+                              <button className="py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition">
+                                 Abaikan
+                              </button>
+                              <button className="py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 transition">
+                                 {job.status === 'baru' ? 'Terima Job' : 'Selesaikan'}
+                              </button>
+                           </div>
+                       )}
                     </div>
-                </div>
+                 ))
+              ) : (
+                 <div className="text-center py-20 opacity-50">
+                    <div className="bg-slate-200 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle size={40} className="text-slate-400"/>
+                    </div>
+                    <p className="font-bold text-slate-600">Tidak ada pesanan di tab ini.</p>
+                 </div>
+              )}
+           </div>
+        </div>
 
-                {/* BAGIAN PEKERJAAN AKTIF */}
-                <div>
-                    <h3 className="font-bold text-slate-800 mb-3">Pekerjaan Aktif</h3>
-                    
-                    {activeJob ? (
-                        // JIKA ADA JOB AKTIF
-                        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm relative hover:shadow-md transition">
-                            <span className="absolute top-5 right-5 px-3 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase animate-pulse">
-                                Sedang Jalan
-                            </span>
-                            
-                            <div className="flex gap-4 mb-5">
-                                <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500 border border-orange-100 shrink-0">
-                                    <Wrench size={24} />
-                                </div>
-                                <div className="overflow-hidden w-full">
-                                    <h4 className="font-bold text-slate-800 text-sm truncate">{activeJob.kategori_jasa}</h4>
-                                    
-                                    {/* ✅ IMPLEMENTASI INTEGRASI PETA DI SINI */}
-                                    <a 
-                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeJob.alamat)}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-xs text-blue-600 mt-1 flex items-center gap-1 hover:underline cursor-pointer bg-blue-50 w-fit px-2 py-1 rounded-lg"
-                                        title="Buka lokasi di Google Maps"
-                                    >
-                                        <MapPin size={12} className="shrink-0" /> 
-                                        <span className="truncate max-w-[150px]">{activeJob.alamat}</span>
-                                        <span className="text-[10px] font-bold ml-1">↗</span>
-                                    </a>
+        <div className="mt-8">
+            <Footer variant="light" />
+        </div>
 
-                                    <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                                        <Clock size={12} className="shrink-0" /> 
-                                        <span>{new Date(activeJob.created_at).toLocaleDateString()}</span>
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-2">
-                                <button 
-                                    onClick={() => navigate('/tukang/orderan')}
-                                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
-                                >
-                                    Detail
-                                </button>
-                                <button 
-                                    onClick={() => navigate('/tukang/orderan')}
-                                    className="flex-1 py-2.5 rounded-xl bg-blue-600 text-xs font-bold text-white shadow-lg shadow-blue-200 hover:bg-blue-700 transition"
-                                >
-                                    Selesaikan
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        // JIKA TIDAK ADA JOB AKTIF
-                        <div className="flex flex-col items-center justify-center text-center py-8 bg-white border border-dashed border-slate-200 rounded-3xl">
-                            <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
-                                <Briefcase size={20} className="text-slate-300" />
-                            </div>
-                            <p className="text-sm font-bold text-slate-400">Tidak ada pekerjaan aktif</p>
-                            <p className="text-xs text-slate-400 mt-1">Cek tab Orderan Baru</p>
-                            
-                            <button 
-                                onClick={() => navigate('/tukang/orderan')}
-                                className="mt-4 px-5 py-2.5 bg-slate-800 text-white text-xs font-bold rounded-xl hover:bg-slate-700 transition"
-                            >
-                                Cari Orderan
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-              </div>
-
-              {/* Section Bawah */}
-              <div className="px-6 md:px-0 mt-8">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-slate-800">Ringkasan Cepat</h3>
-                    <button onClick={() => navigate('/tukang/orderan')} className="text-xs text-blue-600 font-bold hover:underline flex items-center">
-                        Lihat Semua <ChevronRight size={14}/>
-                    </button>
-                </div>
-              </div>
-          </div>
-      )}
-
+      </main>
     </div>
   );
 };
+
+const TabButton = ({ active, onClick, label, count }) => (
+  <button 
+    onClick={onClick}
+    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+       active ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+    }`}
+  >
+    {label}
+    {count > 0 && <span className={`px-1.5 py-0.5 rounded text-[10px] ${active ? 'bg-blue-100' : 'bg-slate-300 text-white'}`}>{count}</span>}
+  </button>
+);
 
 export default TukangBeranda;
