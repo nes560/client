@@ -1,0 +1,97 @@
+import React from 'react';
+import { Wrench, Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const Footer = () => {
+  return (
+    <footer className="bg-slate-900 text-slate-300 pt-16 pb-8 font-sans">
+      <div className="max-w-7xl mx-auto px-6">
+        
+        {/* BAGIAN ATAS: Grid 4 Kolom */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+          
+          {/* Kolom 1: Brand & Deskripsi */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-white">
+               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                 <Wrench size={18} strokeWidth={2.5} />
+               </div>
+               <span className="text-xl font-bold tracking-tight">HandyMan.</span>
+            </div>
+            <p className="text-sm text-slate-400 leading-relaxed">
+              Solusi terpercaya untuk segala kebutuhan perbaikan rumah Anda. Cepat, aman, dan profesional.
+            </p>
+          </div>
+
+          {/* Kolom 2: Link Cepat */}
+          <div>
+            <h3 className="text-white font-bold mb-6">Perusahaan</h3>
+            <ul className="space-y-4 text-sm">
+              <li><Link to="/tentang-kami" className="hover:text-blue-400 transition-colors">Tentang Kami</Link></li>
+              <li><Link to="/karir" className="hover:text-blue-400 transition-colors">Karir</Link></li>
+              <li><Link to="/blog" className="hover:text-blue-400 transition-colors">Blog Berita</Link></li>
+              <li><Link to="/mitra" className="hover:text-blue-400 transition-colors">Gabung Jadi Mitra</Link></li>
+            </ul>
+          </div>
+
+          {/* Kolom 3: Layanan Popular */}
+          <div>
+            <h3 className="text-white font-bold mb-6">Layanan</h3>
+            <ul className="space-y-4 text-sm">
+              <li><a href="#" className="hover:text-blue-400 transition-colors">Perbaikan AC</a></li>
+              <li><a href="#" className="hover:text-blue-400 transition-colors">Kelistrikan</a></li>
+              <li><a href="#" className="hover:text-blue-400 transition-colors">Pipa & Saluran Air</a></li>
+              <li><a href="#" className="hover:text-blue-400 transition-colors">Renovasi Ringan</a></li>
+            </ul>
+          </div>
+
+          {/* Kolom 4: Kontak */}
+          <div>
+            <h3 className="text-white font-bold mb-6">Hubungi Kami</h3>
+            <ul className="space-y-4 text-sm">
+              <li className="flex items-start gap-3">
+                <MapPin size={18} className="text-blue-500 mt-0.5" />
+                <span>Jl. Teknologi No. 10, Jakarta Selatan, Indonesia</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Phone size={18} className="text-blue-500" />
+                <span>+62 812-3456-7890</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Mail size={18} className="text-blue-500" />
+                <span>support@handyman.id</span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        {/* GARIS PEMBATAS */}
+        <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          
+          {/* Copyright */}
+          <p className="text-xs text-slate-500 text-center md:text-left">
+            &copy; {new Date().getFullYear()} HandyMan App. Hak Cipta Dilindungi.
+          </p>
+
+          {/* Link Legal & Sosmed */}
+          <div className="flex flex-col md:flex-row items-center gap-6">
+             <div className="flex gap-6 text-xs font-medium">
+                <Link to="/syarat" className="hover:text-white transition-colors">Syarat & Ketentuan</Link>
+                <Link to="/privasi" className="hover:text-white transition-colors">Kebijakan Privasi</Link>
+             </div>
+
+             <div className="flex gap-4">
+                <a href="#" className="p-2 bg-slate-800 rounded-full hover:bg-blue-600 hover:text-white transition-all"><Facebook size={16} /></a>
+                <a href="#" className="p-2 bg-slate-800 rounded-full hover:bg-pink-600 hover:text-white transition-all"><Instagram size={16} /></a>
+                <a href="#" className="p-2 bg-slate-800 rounded-full hover:bg-sky-500 hover:text-white transition-all"><Twitter size={16} /></a>
+             </div>
+          </div>
+
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;

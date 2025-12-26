@@ -2,8 +2,10 @@ import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // --- IMPORT LOGO BARU ---
-// Pastikan file gambar sudah disimpan di folder src/assets/
 import logoImage from '../assets/logo.png';
+
+// ✅ IMPORT FOOTER BARU
+import Footer from '../components/Footer';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -84,7 +86,7 @@ const LandingPage = () => {
             <img 
                 src={logoImage} 
                 alt="HandyMan Logo" 
-                className="h-14 md:h-20 w-auto object-contain drop-shadow-lg" // Mengatur tinggi logo agar pas
+                className="h-14 md:h-20 w-auto object-contain drop-shadow-lg" 
             />
         </div>
         
@@ -222,10 +224,10 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-white py-8 text-center text-slate-500 text-sm border-t border-slate-100">
-        &copy; 2024 HandyMan Indonesia. All rights reserved.
-      </footer>
+      {/* ✅ GANTI FOOTER LAMA DENGAN COMPONENT BARU */}
+      <div className="relative z-20">
+         <Footer />
+      </div>
 
     </div>
   );

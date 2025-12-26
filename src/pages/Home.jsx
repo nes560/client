@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import BottomNav from '../components/BottomNav';
+import Footer from '../components/Footer'; // ✅ IMPORT FOOTER
 import { API_URL } from '../utils/api'; 
 
 const Home = () => {
@@ -314,9 +315,15 @@ const Home = () => {
             </div>
         )}
 
+        {/* ✅ FOOTER DI SINI (Muncul di semua Tampilan/Tab) */}
+        <div className="mt-8">
+           <Footer />
+        </div>
+
       </main>
 
-      <BottomNav setView={setActiveView} />
+      {/* ✅ BOTTOM NAV (Tanpa props setView karena sudah pakai router) */}
+      <BottomNav />
       
     </div>
   );
