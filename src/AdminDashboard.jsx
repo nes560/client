@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, ShoppingBag, MessageSquare, LogOut, 
   Menu, X, Search, MoreVertical, Send, Trash2, CheckCircle, Clock, XCircle 
-} from 'lucide-react'; // Gunakan Lucide React untuk ikon yang konsisten
+} from 'lucide-react'; 
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ const AdminDashboard = () => {
   const [allChats, setAllChats] = useState([]);
   const [selectedChatUser, setSelectedChatUser] = useState(null);
   const [adminMessage, setAdminMessage] = useState("");
-  const [searchTerm, setSearchTerm] = useState(""); // Untuk pencarian user/order
+  const [searchTerm, setSearchTerm] = useState(""); 
 
   // Stats State
   const [stats, setStats] = useState({
@@ -74,7 +74,7 @@ const AdminDashboard = () => {
         countMitra: userList.filter(u => u.tipe_pengguna === 'tukang').length,
         totalOrders: orderList.length,
         ordersSelesai: doneCount,
-        revenue: doneCount * 15000 // Estimasi fee admin per order
+        revenue: doneCount * 15000 
       });
     } catch (err) { console.error("Error fetching data", err); }
   };
@@ -163,7 +163,7 @@ const AdminDashboard = () => {
       <main className="flex-1 flex flex-col min-w-0 bg-slate-50">
         
         {/* HEADER MOBILE */}
-        <header className="bg-white px-6 py-4 shadow-sm md:hidden flex items-center justify-between sticky top-0 z-30">
+        <header className="bg-white px-6 py-4 shadow-sm md:hidden flex items-center justify-between sticky top-0 z-30 shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 text-slate-600"><Menu /></button>
             <h1 className="font-bold text-slate-800 text-lg capitalize">{activeTab}</h1>
@@ -191,7 +191,6 @@ const AdminDashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Recent Orders Mini Table */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                   <h3 className="font-bold text-slate-800 mb-4">Pesanan Terbaru</h3>
                   <div className="space-y-4">
@@ -313,19 +312,19 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {/* === CHAT VIEW === */}
+          {/* === CHAT VIEW (FIXED SCROLL MOBILE) === */}
           {activeTab === 'chat' && (
-            <div className="flex flex-col md:flex-row h-[calc(100vh-100px)] bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col md:flex-row h-[calc(100dvh-130px)] md:h-[calc(100vh-100px)] bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-300">
               
               {/* CONTACTS LIST */}
-              <div className={`w-full md:w-80 border-r border-slate-100 flex flex-col bg-slate-50 ${selectedChatUser ? 'hidden md:flex' : 'flex'}`}>
-                <div className="p-4 border-b border-slate-200 bg-white">
+              <div className={`w-full md:w-80 border-r border-slate-100 flex flex-col bg-slate-50 ${selectedChatUser ? 'hidden md:flex' : 'flex h-full'}`}>
+                <div className="p-4 border-b border-slate-200 bg-white shrink-0">
                   <h3 className="font-bold text-slate-800">Pesan Masuk</h3>
                 </div>
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto min-h-0">
                   {chatContacts.map(user => (
                     <div key={user.id} onClick={() => setSelectedChatUser(user)} className={`p-4 border-b border-slate-100 cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-3 ${selectedChatUser?.id === user.id ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''}`}>
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm shadow-sm ${user.tipe_pengguna === 'tukang' ? 'bg-orange-500' : 'bg-blue-500'}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm shadow-sm shrink-0 ${user.tipe_pengguna === 'tukang' ? 'bg-orange-500' : 'bg-blue-500'}`}>
                         {user.nama_depan.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -338,12 +337,12 @@ const AdminDashboard = () => {
               </div>
 
               {/* CHAT AREA */}
-              <div className={`flex-1 flex flex-col bg-white ${!selectedChatUser ? 'hidden md:flex' : 'flex'}`}>
+              <div className={`flex-1 flex flex-col bg-white ${!selectedChatUser ? 'hidden md:flex' : 'flex h-full'}`}>
                 {selectedChatUser ? (
                   <>
-                    <div className="p-4 border-b border-slate-100 flex items-center gap-3 bg-white/80 backdrop-blur sticky top-0 z-10">
+                    <div className="p-4 border-b border-slate-100 flex items-center gap-3 bg-white/80 backdrop-blur sticky top-0 z-10 shrink-0">
                       <button onClick={() => setSelectedChatUser(null)} className="md:hidden p-2 -ml-2 text-slate-500"><X size={20}/></button>
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 shrink-0">
                         {selectedChatUser.nama_depan.charAt(0)}
                       </div>
                       <div>
@@ -352,7 +351,7 @@ const AdminDashboard = () => {
                       </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 min-h-0">
                       {currentMessages.length === 0 && (
                         <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-2 opacity-50">
                           <MessageSquare size={48} />
@@ -363,7 +362,7 @@ const AdminDashboard = () => {
                         const isMe = msg.sender_id === adminId;
                         return (
                           <div key={i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[75%] px-5 py-3 rounded-2xl text-sm shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-slate-700 border border-slate-100 rounded-bl-none'}`}>
+                            <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-slate-700 border border-slate-100 rounded-bl-none'}`}>
                               <p>{msg.message}</p>
                               <p className={`text-[10px] mt-1 text-right opacity-70`}>
                                 {new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
@@ -375,7 +374,7 @@ const AdminDashboard = () => {
                       <div ref={chatEndRef} />
                     </div>
 
-                    <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 bg-white flex gap-3">
+                    <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 bg-white flex gap-3 shrink-0">
                       <input 
                         type="text" 
                         className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
@@ -383,7 +382,7 @@ const AdminDashboard = () => {
                         value={adminMessage}
                         onChange={e => setAdminMessage(e.target.value)}
                       />
-                      <button type="submit" className="bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200 disabled:opacity-50" disabled={!adminMessage.trim()}>
+                      <button type="submit" className="bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200 disabled:opacity-50 shrink-0" disabled={!adminMessage.trim()}>
                         <Send size={20} />
                       </button>
                     </form>
