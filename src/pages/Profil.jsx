@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, ArrowLeft, LogOut, User, MapPin } from 'lucide-react';
+import toast from 'react-hot-toast'; // ✅ 1. Import Toast
 import Sidebar from '../components/Sidebar';
 import BottomNav from '../components/BottomNav';
+import ConfirmModal from '../components/ConfirmModal'; // ✅ 2. Import Modal Konfirmasi
 
 const Profil = () => {
   const navigate = useNavigate();
   const API_URL = "https://backend-production-b8f3.up.railway.app/api";
 
-  // State User & Tampilan (Logic sama persis dengan Tukang)
   const [user, setUser] = useState({
       id: '', nama_depan: '', nama_belakang: '', email: '', alamat: ''
   });
   const [view, setView] = useState('menu'); // 'menu' | 'edit'
   const [loading, setLoading] = useState(false);
+  
+  // ✅ 3. State untuk Modal Logout
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // 1. Load Data
   useEffect(() => {
@@ -25,15 +29,19 @@ const Profil = () => {
     }
   }, [navigate]);
 
-  // 2. Fungsi Logout
-  const handleLogout = () => {
-    if(window.confirm("Yakin ingin keluar aplikasi?")) {
-        localStorage.removeItem('user_session');
-        navigate('/login');
-    }
+  // 2. Fungsi Logout (Buka Modal)
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
   };
 
-  // 3. Fungsi Update Profil
+  // 3. Eksekusi Logout (Setelah dikonfirmasi di Modal)
+  const confirmLogout = () => {
+    localStorage.removeItem('user_session');
+    toast.success("Berhasil keluar aplikasi");
+    navigate('/login');
+  };
+
+  // 4. Fungsi Update Profil
   const handleUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -50,29 +58,29 @@ const Profil = () => {
         });
         const result = await response.json();
         if(result.success) {
-            alert("✅ Profil berhasil disimpan!");
+            toast.success("Profil berhasil disimpan!"); // ✅ Pakai Toast
             localStorage.setItem('user_session', JSON.stringify(result.user));
             setUser(result.user);
-            setView('menu'); // Kembali ke menu utama
+            setView('menu'); 
         } else {
-            alert("Gagal: " + result.message);
+            toast.error("Gagal: " + result.message); // ✅ Pakai Toast
         }
     } catch (err) {
-        alert("Gagal koneksi server");
+        toast.error("Gagal koneksi server");
     } finally {
         setLoading(false);
     }
   };
 
-  // --- TAMPILAN 1: EDIT PROFIL (Putih Bersih) ---
+  // --- TAMPILAN 1: EDIT PROFIL ---
   if (view === 'edit') {
       return (
-        <div className="max-w-7xl mx-auto min-h-screen font-sans text-slate-800 bg-slate-50 relative md:flex">
+        <div className="max-w-7xl mx-auto min-h-screen font-sans text-slate-800 bg-slate-50 relative md:flex animate-fade-in">
              <Sidebar activeView="profil" />
-             <main className="flex-1 min-h-screen p-4 md:p-8">
+             <main className="flex-1 min-h-screen p-4 md:p-8 pb-24">
                 
                 <div className="flex items-center gap-2 mb-6">
-                    <button onClick={()=>setView('menu')} className="p-2 hover:bg-white rounded-full transition">
+                    <button onClick={()=>setView('menu')} className="p-2 hover:bg-white rounded-full transition active:scale-95">
                         <ArrowLeft size={24} className="text-slate-700"/>
                     </button>
                     <h1 className="text-2xl font-bold text-slate-800">Edit Profil</h1>
@@ -83,35 +91,35 @@ const Profil = () => {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nama Depan</label>
-                                <input type="text" value={user.nama_depan} onChange={e=>setUser({...user, nama_depan: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-blue-500"/>
+                                <input type="text" value={user.nama_depan} onChange={e=>setUser({...user, nama_depan: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-blue-500 transition"/>
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nama Belakang</label>
-                                <input type="text" value={user.nama_belakang} onChange={e=>setUser({...user, nama_belakang: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-blue-500"/>
+                                <input type="text" value={user.nama_belakang} onChange={e=>setUser({...user, nama_belakang: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-blue-500 transition"/>
                             </div>
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label>
-                            <input type="email" value={user.email} onChange={e=>setUser({...user, email: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-blue-500"/>
+                            <input type="email" value={user.email} onChange={e=>setUser({...user, email: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-blue-500 transition"/>
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Alamat Lengkap</label>
-                            <textarea rows="3" value={user.alamat || ''} onChange={e=>setUser({...user, alamat: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-blue-500"></textarea>
+                            <textarea rows="3" value={user.alamat || ''} onChange={e=>setUser({...user, alamat: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-blue-500 transition"></textarea>
                         </div>
-                        <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition mt-4">
+                        <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition mt-4 active:scale-95 disabled:bg-slate-300">
                             {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
                         </button>
                     </form>
                 </div>
              </main>
-             <BottomNav setView={() => {}} />
+             <BottomNav />
         </div>
       );
   }
 
-  // --- TAMPILAN UTAMA: MENU LIST (Gaya Tukang) ---
+  // --- TAMPILAN UTAMA: MENU LIST ---
   return (
-    <div className="max-w-7xl mx-auto min-h-screen font-sans text-slate-800 bg-slate-50 relative md:flex">
+    <div className="max-w-7xl mx-auto min-h-screen font-sans text-slate-800 bg-slate-50 relative md:flex animate-fade-in">
        <Sidebar activeView="profil" />
 
        <main className="flex-1 min-h-screen p-4 md:p-8 pb-24 md:pb-8">
@@ -134,20 +142,19 @@ const Profil = () => {
                     </div>
                 </div>
 
-                {/* List Menu (Persis Tukang) */}
+                {/* List Menu */}
                 <div className="divide-y divide-slate-50">
                     <MenuItem label="Kelola Profil" onClick={() => setView('edit')} />
                     
-                    {/* Pelanggan biasanya melihat Riwayat Pesanan, bukan Saldo */}
                     <MenuItem label="Riwayat Pesanan Saya" onClick={() => navigate('/riwayat-pesanan')} />
                     
                     <div className="bg-slate-50 px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wide">Pengaturan</div>
                     
-                    <MenuItem label="Notifikasi" onClick={() => alert("Tidak ada notifikasi")} />
-                    <MenuItem label="Pusat Bantuan" onClick={() => alert("Chat Admin untuk bantuan")} />
+                    <MenuItem label="Notifikasi" onClick={() => toast("Tidak ada notifikasi baru", { icon: '🔔' })} />
+                    <MenuItem label="Pusat Bantuan" onClick={() => toast("Fitur Chat Admin segera hadir!", { icon: '💬' })} />
                     
-                    {/* Logout di dalam List */}
-                    <button onClick={handleLogout} className="w-full flex justify-between items-center px-6 py-4 hover:bg-red-50 transition text-red-500 text-sm font-bold text-left group">
+                    {/* Logout Button */}
+                    <button onClick={handleLogoutClick} className="w-full flex justify-between items-center px-6 py-4 hover:bg-red-50 transition text-red-500 text-sm font-bold text-left group active:bg-red-100">
                         <div className="flex items-center gap-3">
                             <LogOut size={18} /> Keluar Aplikasi
                         </div>
@@ -158,14 +165,23 @@ const Profil = () => {
            <p className="text-center text-xs text-slate-400 mt-6 max-w-lg">Versi Aplikasi 1.0.5</p>
        </main>
 
-       <BottomNav setView={() => navigate('/')} />
+       <BottomNav />
+
+       {/* ✅ 5. Render Modal Konfirmasi Logout */}
+       <ConfirmModal 
+          isOpen={showLogoutModal}
+          onClose={() => setShowLogoutModal(false)}
+          onConfirm={confirmLogout}
+          title="Keluar Aplikasi?"
+          message="Anda harus login kembali untuk mengakses akun ini."
+      />
     </div>
   );
 };
 
 // Komponen Item Menu (Reusable)
 const MenuItem = ({ label, onClick }) => (
-    <button onClick={onClick} className="w-full flex justify-between items-center px-6 py-4 hover:bg-slate-50 transition text-slate-700 text-sm font-medium text-left">
+    <button onClick={onClick} className="w-full flex justify-between items-center px-6 py-4 hover:bg-slate-50 transition text-slate-700 text-sm font-medium text-left active:bg-slate-100">
         {label}
         <ChevronRight size={16} className="text-slate-300"/>
     </button>
