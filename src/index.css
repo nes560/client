@@ -1,3 +1,54 @@
+/* 1. Import Font Poppins dari Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* 2. Directive Tailwind (Wajib ada) */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 3. Setting Global Body */
+@layer base {
+  body {
+    font-family: 'Poppins', sans-serif; /* Menggunakan font Poppins */
+    @apply bg-slate-50 text-slate-800; /* Warna background lembut & teks gelap */
+    -webkit-tap-highlight-color: transparent; /* Menghilangkan blok biru saat klik di HP Android */
+  }
+}
+
+/* 4. Custom Utilities (Class Tambahan) */
+@layer utilities {
+  
+  /* Sembunyikan Scrollbar (Agar tampilan mobile bersih) */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Efek Glassmorphism (Kaca Buram) untuk Navigasi Bawah */
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.85); /* Putih transparan */
+    backdrop-filter: blur(12px);            /* Efek blur di belakang */
+    -webkit-backdrop-filter: blur(12px);    /* Support untuk Safari/iOS */
+    border-top: 1px solid rgba(255, 255, 255, 0.3); /* Garis tipis di atas */
+  }
+
+  /* Animasi Fade In (Masuk perlahan dari bawah) */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+}
+
+/* 5. Definisi Keyframes Animasi */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px); /* Mulai dari sedikit ke bawah */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);    /* Kembali ke posisi normal */
+  }
+}
