@@ -1,14 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-// --- ICONS (Agar tampilan cantik tanpa install library lain) ---
-const MenuIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
-const XIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
-const HomeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
-const UsersIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
-const OrderIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>;
-const ChatIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>;
-const LogoutIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
+import { 
+  LayoutDashboard, Users, ShoppingBag, MessageSquare, LogOut, 
+  Menu, X, Search, MoreVertical, Send, Trash2, CheckCircle, Clock, XCircle 
+} from 'lucide-react'; // Gunakan Lucide React untuk ikon yang konsisten
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -17,415 +12,438 @@ const AdminDashboard = () => {
   // --- CONFIG ---
   const API_URL = "https://backend-production-b8f3.up.railway.app/api";
 
-  // --- STATE UTAMA ---
+  // --- STATE ---
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Untuk Mobile Sidebar
-  
-  // --- STATE DATA ---
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [adminId, setAdminId] = useState(null);
-
-  // --- STATE CHAT ---
+  
+  // Chat State
   const [allChats, setAllChats] = useState([]);
   const [selectedChatUser, setSelectedChatUser] = useState(null);
   const [adminMessage, setAdminMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // Untuk pencarian user/order
 
-  // --- STATE STATISTIK ---
+  // Stats State
   const [stats, setStats] = useState({
     totalUsers: 0, countPelanggan: 0, countMitra: 0,
     totalOrders: 0, ordersSelesai: 0, revenue: 0
   });
 
-  // 1. CEK SESSION & FETCH AWAL
+  // --- EFFECTS ---
   useEffect(() => {
     const sessionStr = localStorage.getItem('user_session');
-    if (!sessionStr) {
-      alert("Anda belum login.");
-      navigate('/login');
-      return;
-    }
-
+    if (!sessionStr) { navigate('/login'); return; }
     const session = JSON.parse(sessionStr);
-    if (session.tipe_pengguna !== 'admin') {
-      alert("Akses Ditolak! Anda bukan Admin.");
-      navigate('/login');
-      return;
-    }
+    if (session.tipe_pengguna !== 'admin') { navigate('/login'); return; }
     
     setAdminId(session.id);
     fetchData();
-
-    // Auto refresh chat tiap 5 detik
     const interval = setInterval(fetchChatsOnly, 5000);
     return () => clearInterval(interval);
   }, [navigate]);
 
-  // 2. AUTO SCROLL CHAT
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [allChats, selectedChatUser]);
 
-  // --- FUNGSI FETCH DATA LENGKAP ---
+  // --- DATA FETCHING ---
   const fetchData = async () => {
     try {
-      // Users
-      const resUser = await fetch(`${API_URL}/users/all`);
+      const [resUser, resOrder] = await Promise.all([
+        fetch(`${API_URL}/users/all`),
+        fetch(`${API_URL}/pesanan`)
+      ]);
+      
       const dataUser = await resUser.json();
-      const userList = dataUser.success ? dataUser.data : [];
-      setUsers(userList);
-
-      // Orders
-      const resOrder = await fetch(`${API_URL}/pesanan`);
       const dataOrder = await resOrder.json();
+      
+      const userList = dataUser.success ? dataUser.data : [];
       const orderList = dataOrder.success ? dataOrder.data : [];
+      
+      setUsers(userList);
       setOrders(orderList);
-
-      // Chats
       await fetchChatsOnly();
 
-      // Hitung Statistik
-      const mitraCount = userList.filter(u => u.tipe_pengguna === 'tukang').length;
-      const userCount = userList.filter(u => u.tipe_pengguna === 'user' || u.tipe_pengguna === 'pelanggan').length;
+      // Calculate Stats
       const doneCount = orderList.filter(o => o.status === 'Selesai').length;
-
       setStats({
         totalUsers: userList.length,
-        countPelanggan: userCount,
-        countMitra: mitraCount,
+        countPelanggan: userList.filter(u => ['user','pelanggan'].includes(u.tipe_pengguna)).length,
+        countMitra: userList.filter(u => u.tipe_pengguna === 'tukang').length,
         totalOrders: orderList.length,
         ordersSelesai: doneCount,
-        revenue: doneCount * 50000 // Asumsi harga per jasa fix
+        revenue: doneCount * 15000 // Estimasi fee admin per order
       });
-
-    } catch (err) {
-      console.error("Gagal ambil data admin", err);
-    }
+    } catch (err) { console.error("Error fetching data", err); }
   };
 
-  // --- FUNGSI KHUSUS FETCH CHAT (Ringan) ---
   const fetchChatsOnly = async () => {
-      try {
-        const resChat = await fetch(`${API_URL}/chats`);
-        const dataChat = await resChat.json();
-        if(dataChat.success) {
-            setAllChats(dataChat.data);
-        }
-      } catch (error) {
-          console.error("Gagal load chat", error);
-      }
+    try {
+      const res = await fetch(`${API_URL}/chats`);
+      const data = await res.json();
+      if(data.success) setAllChats(data.data);
+    } catch (e) { console.error(e); }
   };
 
-  // --- ACTIONS ---
+  // --- HANDLERS ---
   const handleSendMessage = async (e) => {
-      e.preventDefault();
-      if(!adminMessage.trim() || !selectedChatUser) return;
-
-      try {
-          await fetch(`${API_URL}/chats`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  sender_id: adminId,
-                  receiver_id: selectedChatUser.id,
-                  message: adminMessage
-              })
-          });
-          setAdminMessage(""); 
-          fetchChatsOnly(); 
-      } catch (error) {
-          alert("Gagal mengirim pesan");
-      }
+    e.preventDefault();
+    if(!adminMessage.trim() || !selectedChatUser) return;
+    try {
+      await fetch(`${API_URL}/chats`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender_id: adminId, receiver_id: selectedChatUser.id, message: adminMessage })
+      });
+      setAdminMessage("");
+      fetchChatsOnly();
+    } catch (e) { alert("Gagal kirim pesan"); }
   };
 
   const handleDeleteUser = async (id) => {
-    if(!window.confirm("⚠️ Hapus user ini secara permanen?")) return;
-    try {
-        await fetch(`${API_URL}/users/${id}`, { method: 'DELETE' });
-        fetchData(); 
-    } catch (error) {
-        alert("Gagal menghapus user");
-    }
+    if(!window.confirm("Hapus user ini?")) return;
+    await fetch(`${API_URL}/users/${id}`, { method: 'DELETE' });
+    fetchData();
   };
 
   const handleUpdateStatus = async (id, newStatus) => {
-    try {
-        await fetch(`${API_URL}/pesanan/${id}/status`, { 
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
-        });
-        // Optimistic update
-        setOrders(orders.map(o => o.id === id ? { ...o, status: newStatus } : o));
-    } catch (error) {
-        alert("Gagal update status");
-    }
+    await fetch(`${API_URL}/pesanan/${id}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    });
+    setOrders(orders.map(o => o.id === id ? { ...o, status: newStatus } : o));
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('user_session');
-    navigate('/login');
-  };
-
-  // --- FILTERING DATA UTILS ---
-  const chatContacts = users.filter(u => u.id !== adminId); 
+  // --- FILTERED DATA ---
+  const filteredUsers = users.filter(u => u.nama_depan.toLowerCase().includes(searchTerm.toLowerCase()));
+  const chatContacts = users.filter(u => u.id !== adminId);
   const currentMessages = allChats.filter(msg => 
-      (msg.sender_id === adminId && msg.receiver_id === selectedChatUser?.id) || 
-      (msg.sender_id === selectedChatUser?.id && msg.receiver_id === adminId)
+    (msg.sender_id === adminId && msg.receiver_id === selectedChatUser?.id) || 
+    (msg.sender_id === selectedChatUser?.id && msg.receiver_id === adminId)
   );
 
   return (
-    <div className="flex h-screen bg-slate-100 font-sans overflow-hidden">
+    <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
       
-      {/* 1. MOBILE OVERLAY */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden" onClick={() => setSidebarOpen(false)}></div>
-      )}
+      {/* OVERLAY MOBILE */}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      {/* 2. SIDEBAR (RESPONSIVE) */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out shadow-xl flex flex-col
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
-        md:relative md:translate-x-0
-      `}>
+      {/* SIDEBAR */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white transform transition-transform duration-300 md:relative md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col shadow-2xl`}>
         <div className="p-6 flex items-center justify-between border-b border-slate-800">
-          <h1 className="text-xl font-extrabold text-blue-400">ADMIN<span className="text-white">PANEL</span></h1>
-          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-400"><XIcon /></button>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-500/30">H</div>
+            <div>
+              <h1 className="font-bold text-lg tracking-wide">HandyMan</h1>
+              <p className="text-[10px] text-slate-400 uppercase tracking-widest">Admin Panel</p>
+            </div>
+          </div>
+          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-400"><X /></button>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          <button onClick={() => { setActiveTab('dashboard'); setSidebarOpen(false); }} 
-            className={`w-full text-left px-4 py-3 rounded-xl transition flex items-center gap-3 font-medium ${activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-lg' : 'hover:bg-slate-800 text-slate-400'}`}>
-            <HomeIcon /> Dashboard
-          </button>
-          <button onClick={() => { setActiveTab('users'); setSidebarOpen(false); }} 
-            className={`w-full text-left px-4 py-3 rounded-xl transition flex items-center gap-3 font-medium ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-lg' : 'hover:bg-slate-800 text-slate-400'}`}>
-            <UsersIcon /> Data Pengguna
-          </button>
-          <button onClick={() => { setActiveTab('orders'); setSidebarOpen(false); }} 
-            className={`w-full text-left px-4 py-3 rounded-xl transition flex items-center gap-3 font-medium ${activeTab === 'orders' ? 'bg-blue-600 text-white shadow-lg' : 'hover:bg-slate-800 text-slate-400'}`}>
-            <OrderIcon /> Data Pesanan
-          </button>
-          <button onClick={() => { setActiveTab('chat'); setSidebarOpen(false); }} 
-            className={`w-full text-left px-4 py-3 rounded-xl transition flex items-center gap-3 font-medium ${activeTab === 'chat' ? 'bg-blue-600 text-white shadow-lg' : 'hover:bg-slate-800 text-slate-400'}`}>
-            <ChatIcon /> Live Chat
-          </button>
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+          <SidebarItem icon={<LayoutDashboard size={20} />} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => { setActiveTab('dashboard'); setSidebarOpen(false); }} />
+          <SidebarItem icon={<Users size={20} />} label="Pengguna" active={activeTab === 'users'} onClick={() => { setActiveTab('users'); setSidebarOpen(false); }} />
+          <SidebarItem icon={<ShoppingBag size={20} />} label="Pesanan" active={activeTab === 'orders'} onClick={() => { setActiveTab('orders'); setSidebarOpen(false); }} />
+          <SidebarItem icon={<MessageSquare size={20} />} label="Live Chat" active={activeTab === 'chat'} onClick={() => { setActiveTab('chat'); setSidebarOpen(false); }} badge={allChats.length > 0} />
         </nav>
 
         <div className="p-4 border-t border-slate-800">
-          <button onClick={handleLogout} className="flex items-center gap-2 w-full text-red-400 hover:text-red-300 p-2 font-bold transition">
-            <LogoutIcon /> Keluar
+          <button onClick={() => { localStorage.removeItem('user_session'); navigate('/login'); }} className="flex items-center gap-3 w-full px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition group">
+            <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" /> 
+            <span className="font-medium">Keluar</span>
           </button>
         </div>
       </aside>
 
-      {/* 3. KONTEN UTAMA */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
+      {/* MAIN CONTENT */}
+      <main className="flex-1 flex flex-col min-w-0 bg-slate-50">
         
-        {/* Header Mobile */}
-        <header className="bg-white p-4 shadow-sm md:hidden flex items-center justify-between z-10">
-            <div className="flex items-center gap-3">
-                <button onClick={() => setSidebarOpen(true)} className="text-slate-700"><MenuIcon /></button>
-                <span className="font-bold text-slate-800">Admin Panel</span>
-            </div>
+        {/* HEADER MOBILE */}
+        <header className="bg-white px-6 py-4 shadow-sm md:hidden flex items-center justify-between sticky top-0 z-30">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 text-slate-600"><Menu /></button>
+            <h1 className="font-bold text-slate-800 text-lg capitalize">{activeTab}</h1>
+          </div>
         </header>
 
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-100">
-
-          {/* === DASHBOARD TAB === */}
+        {/* CONTENT SCROLLABLE */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
+          
+          {/* === DASHBOARD VIEW === */}
           {activeTab === 'dashboard' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-                <h2 className="text-2xl font-bold text-slate-800">Overview Statistik</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                        <p className="text-slate-500 font-medium text-sm uppercase">Total Users</p>
-                        <h3 className="text-4xl font-bold text-slate-800 mt-2">{stats.totalUsers}</h3>
-                        <p className="text-xs text-blue-500 mt-2 font-bold bg-blue-50 w-max px-2 py-1 rounded">
-                            {stats.countMitra} Mitra • {stats.countPelanggan} Pelanggan
-                        </p>
-                    </div>
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                        <p className="text-slate-500 font-medium text-sm uppercase">Total Order</p>
-                        <h3 className="text-4xl font-bold text-slate-800 mt-2">{stats.totalOrders}</h3>
-                        <p className="text-xs text-orange-500 mt-2 font-bold bg-orange-50 w-max px-2 py-1 rounded">
-                            {stats.ordersSelesai} Selesai
-                        </p>
-                    </div>
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                        <p className="text-slate-500 font-medium text-sm uppercase">Revenue</p>
-                        <h3 className="text-4xl font-bold text-green-600 mt-2">Rp {stats.revenue.toLocaleString('id-ID')}</h3>
-                    </div>
+            <div className="space-y-8 animate-in fade-in zoom-in duration-300">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Overview Statistik</h2>
+                  <p className="text-slate-500 text-sm mt-1">Ringkasan performa aplikasi hari ini.</p>
                 </div>
+                <button onClick={fetchData} className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition shadow-sm">Refresh Data</button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard title="Total Pengguna" value={stats.totalUsers} sub={`${stats.countMitra} Mitra / ${stats.countPelanggan} User`} icon={<Users size={24} className="text-blue-600"/>} color="bg-blue-50" />
+                <StatCard title="Total Pesanan" value={stats.totalOrders} sub={`${stats.ordersSelesai} Selesai`} icon={<ShoppingBag size={24} className="text-purple-600"/>} color="bg-purple-50" />
+                <StatCard title="Total Pendapatan" value={`Rp ${stats.revenue.toLocaleString('id-ID')}`} sub="Estimasi Profit" icon={<CheckCircle size={24} className="text-green-600"/>} color="bg-green-50" />
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Recent Orders Mini Table */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                  <h3 className="font-bold text-slate-800 mb-4">Pesanan Terbaru</h3>
+                  <div className="space-y-4">
+                    {orders.slice(0, 5).map(o => (
+                      <div key={o.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center font-bold text-xs text-slate-500">
+                            {o.nama_user?.charAt(0) || "?"}
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-slate-800">{o.kategori_jasa}</p>
+                            <p className="text-xs text-slate-500">{o.nama_user}</p>
+                          </div>
+                        </div>
+                        <StatusBadge status={o.status} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* === USERS TAB === */}
+          {/* === USERS VIEW === */}
           {activeTab === 'users' && (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="p-6 border-b border-slate-100"><h3 className="font-bold">Manajemen User</h3></div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm text-slate-600">
-                        <thead className="bg-slate-50 text-slate-800 font-bold">
-                            <tr>
-                                <th className="p-4">Nama</th>
-                                <th className="p-4">Tipe</th>
-                                <th className="p-4">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {users.map((u) => (
-                                <tr key={u.id} className="hover:bg-slate-50">
-                                    <td className="p-4 font-medium text-slate-900">{u.nama_depan} {u.nama_belakang}</td>
-                                    <td className="p-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${u.tipe_pengguna === 'tukang' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
-                                            {u.tipe_pengguna}
-                                        </span>
-                                    </td>
-                                    <td className="p-4">
-                                        {u.tipe_pengguna !== 'admin' && (
-                                            <button onClick={() => handleDeleteUser(u.id)} className="text-red-500 hover:text-red-700 font-bold text-xs">Hapus</button>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full animate-in slide-in-from-bottom-4 duration-300">
+              <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <h3 className="font-bold text-lg text-slate-800">Data Pengguna</h3>
+                <div className="relative w-full md:w-64">
+                  <Search className="absolute left-3 top-2.5 text-slate-400" size={18} />
+                  <input 
+                    type="text" 
+                    placeholder="Cari nama..." 
+                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
+              </div>
+              <div className="overflow-x-auto flex-1">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
+                    <tr>
+                      <th className="p-4 w-16">#</th>
+                      <th className="p-4">Nama Lengkap</th>
+                      <th className="p-4">Email / Kontak</th>
+                      <th className="p-4">Peran</th>
+                      <th className="p-4 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {filteredUsers.map((u, i) => (
+                      <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-4 text-slate-400">{i + 1}</td>
+                        <td className="p-4 font-medium text-slate-800 flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white ${u.tipe_pengguna === 'tukang' ? 'bg-orange-500' : 'bg-blue-500'}`}>
+                            {u.nama_depan.charAt(0)}
+                          </div>
+                          {u.nama_depan} {u.nama_belakang}
+                        </td>
+                        <td className="p-4 text-slate-500">{u.email || '-'}</td>
+                        <td className="p-4">
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold capitalize ${u.tipe_pengguna === 'tukang' ? 'bg-orange-50 text-orange-600 border border-orange-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
+                            {u.tipe_pengguna}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right">
+                          {u.tipe_pengguna !== 'admin' && (
+                            <button onClick={() => handleDeleteUser(u.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Hapus User">
+                              <Trash2 size={18} />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
-          {/* === ORDERS TAB === */}
+          {/* === ORDERS VIEW === */}
           {activeTab === 'orders' && (
-            <div className="grid gap-4">
-                {orders.map(order => (
-                    <div key={order.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between md:items-center gap-4">
-                        <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="font-bold text-lg">{order.kategori_jasa}</span>
-                                <span className={`text-[10px] px-2 py-0.5 rounded border ${
-                                    order.status === 'Selesai' ? 'border-green-200 bg-green-50 text-green-700' : 
-                                    order.status === 'Dibatalkan' ? 'border-red-200 bg-red-50 text-red-700' : 'border-yellow-200 bg-yellow-50 text-yellow-700'
-                                }`}>{order.status}</span>
-                            </div>
-                            <p className="text-sm text-slate-500">Pelanggan: <span className="font-medium text-slate-700">{order.nama_user}</span></p>
-                            <p className="text-xs text-slate-400 mt-1 max-w-md truncate">"{order.deskripsi_masalah}"</p>
+            <div className="grid gap-4 animate-in slide-in-from-bottom-4 duration-300">
+              {orders.map(order => (
+                <div key={order.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow group">
+                  <div className="flex flex-col md:flex-row justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                        <ShoppingBag size={24} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-bold text-slate-800">{order.kategori_jasa}</h3>
+                          <span className="text-xs text-slate-400">• ID: #{order.id}</span>
                         </div>
-                        <div className="flex gap-2">
-                            <select 
-                                className="bg-slate-100 border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                                value={order.status}
-                                onChange={(e)=>handleUpdateStatus(order.id, e.target.value)}
-                            >
-                                <option value="Menunggu Konfirmasi">Menunggu</option>
-                                <option value="Diproses">Diproses</option>
-                                <option value="Selesai">Selesai</option>
-                                <option value="Dibatalkan">Batalkan</option>
-                            </select>
+                        <p className="text-sm text-slate-600 mb-2">Pelanggan: <span className="font-medium">{order.nama_user}</span></p>
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm text-slate-600 italic">
+                          "{order.deskripsi_masalah}"
                         </div>
+                      </div>
                     </div>
-                ))}
+                    
+                    <div className="flex flex-col items-end gap-3 min-w-[140px]">
+                      <StatusBadge status={order.status} />
+                      <select 
+                        value={order.status}
+                        onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
+                        className="w-full text-xs font-medium bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer hover:bg-slate-50"
+                      >
+                        <option value="Menunggu Konfirmasi">Menunggu</option>
+                        <option value="Diproses">Diproses</option>
+                        <option value="Selesai">Selesai</option>
+                        <option value="Dibatalkan">Batalkan</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* === CHAT TAB (RESPONSIVE) === */}
+          {/* === CHAT VIEW === */}
           {activeTab === 'chat' && (
-            <div className="flex flex-col md:flex-row h-[calc(100vh-120px)] md:h-[calc(100vh-80px)] bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                
-                {/* LIST KONTAK (KIRI) */}
-                <div className={`w-full md:w-1/3 border-b md:border-b-0 md:border-r border-slate-100 flex flex-col ${selectedChatUser ? 'hidden md:flex' : 'flex'}`}>
-                    <div className="p-4 bg-slate-50 border-b border-slate-100">
-                        <h3 className="font-bold text-slate-700">Inbox</h3>
-                    </div>
-                    <div className="flex-1 overflow-y-auto">
-                        {chatContacts.map(user => {
-                            const hasChat = allChats.some(m => m.sender_id === user.id || m.receiver_id === user.id);
-                            return (
-                                <div key={user.id} onClick={() => setSelectedChatUser(user)}
-                                    className={`p-4 border-b border-slate-50 cursor-pointer hover:bg-blue-50 transition flex items-center gap-3 ${selectedChatUser?.id === user.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''}`}>
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${user.tipe_pengguna === 'tukang' ? 'bg-orange-400' : 'bg-blue-400'}`}>
-                                        {user.nama_depan.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex justify-between items-center">
-                                            <h4 className="font-bold text-slate-800 text-sm">{user.nama_depan}</h4>
-                                            {hasChat && <span className="w-2 h-2 bg-green-500 rounded-full"></span>}
-                                        </div>
-                                        <p className="text-xs text-slate-500">{user.tipe_pengguna}</p>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+            <div className="flex flex-col md:flex-row h-[calc(100vh-100px)] bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-300">
+              
+              {/* CONTACTS LIST */}
+              <div className={`w-full md:w-80 border-r border-slate-100 flex flex-col bg-slate-50 ${selectedChatUser ? 'hidden md:flex' : 'flex'}`}>
+                <div className="p-4 border-b border-slate-200 bg-white">
+                  <h3 className="font-bold text-slate-800">Pesan Masuk</h3>
                 </div>
+                <div className="flex-1 overflow-y-auto">
+                  {chatContacts.map(user => (
+                    <div key={user.id} onClick={() => setSelectedChatUser(user)} className={`p-4 border-b border-slate-100 cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-3 ${selectedChatUser?.id === user.id ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm shadow-sm ${user.tipe_pengguna === 'tukang' ? 'bg-orange-500' : 'bg-blue-500'}`}>
+                        {user.nama_depan.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-slate-800 text-sm truncate">{user.nama_depan} {user.nama_belakang}</h4>
+                        <p className="text-xs text-slate-500 capitalize truncate">{user.tipe_pengguna}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-                {/* AREA CHAT (KANAN) */}
-                <div className={`w-full md:w-2/3 flex-col bg-slate-50 ${selectedChatUser ? 'flex' : 'hidden md:flex'}`}>
-                    {selectedChatUser ? (
-                        <>
-                            {/* Chat Header */}
-                            <div className="p-3 bg-white border-b border-slate-200 flex items-center gap-3">
-                                <button onClick={() => setSelectedChatUser(null)} className="md:hidden text-slate-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-                                </button>
-                                <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">
-                                    {selectedChatUser.nama_depan.charAt(0)}
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-slate-800 text-sm">{selectedChatUser.nama_depan}</h3>
-                                    <p className="text-[10px] text-slate-500 uppercase">{selectedChatUser.tipe_pengguna}</p>
-                                </div>
-                            </div>
+              {/* CHAT AREA */}
+              <div className={`flex-1 flex flex-col bg-white ${!selectedChatUser ? 'hidden md:flex' : 'flex'}`}>
+                {selectedChatUser ? (
+                  <>
+                    <div className="p-4 border-b border-slate-100 flex items-center gap-3 bg-white/80 backdrop-blur sticky top-0 z-10">
+                      <button onClick={() => setSelectedChatUser(null)} className="md:hidden p-2 -ml-2 text-slate-500"><X size={20}/></button>
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600">
+                        {selectedChatUser.nama_depan.charAt(0)}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-800">{selectedChatUser.nama_depan}</h3>
+                        <p className="text-xs text-green-500 flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Online</p>
+                      </div>
+                    </div>
 
-                            {/* Chat Messages */}
-                            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                                {currentMessages.length === 0 ? (
-                                    <div className="text-center text-slate-400 text-sm mt-10">Mulai percakapan...</div>
-                                ) : (
-                                    currentMessages.map((msg, idx) => {
-                                        const isMe = msg.sender_id === adminId;
-                                        return (
-                                            <div key={idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                                <div className={`max-w-[85%] px-4 py-2 rounded-2xl text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-slate-700 shadow-sm rounded-bl-none'}`}>
-                                                    <p>{msg.message}</p>
-                                                    <p className={`text-[9px] mt-1 text-right ${isMe ? 'text-blue-200' : 'text-slate-400'}`}>
-                                                        {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        );
-                                    })
-                                )}
-                                <div ref={chatEndRef}></div>
-                            </div>
-
-                            {/* Chat Input */}
-                            <form onSubmit={handleSendMessage} className="p-3 bg-white border-t border-slate-200 flex gap-2">
-                                <input 
-                                    type="text" 
-                                    className="flex-1 border border-slate-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-blue-500"
-                                    placeholder="Tulis pesan..."
-                                    value={adminMessage}
-                                    onChange={(e) => setAdminMessage(e.target.value)}
-                                />
-                                <button type="submit" className="bg-blue-600 text-white w-10 h-10 rounded-full hover:bg-blue-700 transition flex items-center justify-center shadow-lg">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                                </button>
-                            </form>
-                        </>
-                    ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center text-slate-300">
-                            <ChatIcon />
-                            <p className="mt-2 text-sm">Pilih kontak untuk chat</p>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+                      {currentMessages.length === 0 && (
+                        <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-2 opacity-50">
+                          <MessageSquare size={48} />
+                          <p>Belum ada percakapan.</p>
                         </div>
-                    )}
-                </div>
+                      )}
+                      {currentMessages.map((msg, i) => {
+                        const isMe = msg.sender_id === adminId;
+                        return (
+                          <div key={i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[75%] px-5 py-3 rounded-2xl text-sm shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-slate-700 border border-slate-100 rounded-bl-none'}`}>
+                              <p>{msg.message}</p>
+                              <p className={`text-[10px] mt-1 text-right opacity-70`}>
+                                {new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                      <div ref={chatEndRef} />
+                    </div>
+
+                    <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 bg-white flex gap-3">
+                      <input 
+                        type="text" 
+                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                        placeholder="Ketik pesan balasan..."
+                        value={adminMessage}
+                        onChange={e => setAdminMessage(e.target.value)}
+                      />
+                      <button type="submit" className="bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200 disabled:opacity-50" disabled={!adminMessage.trim()}>
+                        <Send size={20} />
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center text-slate-300">
+                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                      <MessageSquare size={40} />
+                    </div>
+                    <p>Pilih kontak untuk mulai chat</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
         </div>
       </main>
     </div>
+  );
+};
+
+// --- SUB COMPONENTS ---
+
+const SidebarItem = ({ icon, label, active, onClick, badge }) => (
+  <button onClick={onClick} className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+    <div className="flex items-center gap-3">
+      {icon} <span>{label}</span>
+    </div>
+    {badge && <span className="w-2 h-2 bg-red-500 rounded-full"></span>}
+  </button>
+);
+
+const StatCard = ({ title, value, sub, icon, color }) => (
+  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:-translate-y-1 transition-transform duration-300">
+    <div className="flex justify-between items-start">
+      <div>
+        <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">{title}</p>
+        <h3 className="text-2xl font-bold text-slate-800">{value}</h3>
+        <p className="text-xs text-slate-400 mt-1">{sub}</p>
+      </div>
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
+        {icon}
+      </div>
+    </div>
+  </div>
+);
+
+const StatusBadge = ({ status }) => {
+  let styles = "bg-slate-100 text-slate-600 border-slate-200";
+  let icon = <Clock size={12} />;
+  
+  if(status === 'Selesai') { styles = "bg-green-50 text-green-700 border-green-200"; icon = <CheckCircle size={12} />; }
+  else if(status === 'Dibatalkan') { styles = "bg-red-50 text-red-700 border-red-200"; icon = <XCircle size={12} />; }
+  else if(status === 'Diproses') { styles = "bg-blue-50 text-blue-700 border-blue-200"; icon = <Clock size={12} />; }
+
+  return (
+    <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${styles}`}>
+      {icon} {status}
+    </span>
   );
 };
 
