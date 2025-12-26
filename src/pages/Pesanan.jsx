@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';      // Pastikan path ini benar sesuai folder Anda
-import BottomNav from '../components/BottomNav';  // Pastikan path ini benar sesuai folder Anda
+import toast from 'react-hot-toast'; // ✅ Upgrade ke Toast
+import Sidebar from '../components/Sidebar'; 
+import BottomNav from '../components/BottomNav'; 
 
 const Pesanan = () => {
   const navigate = useNavigate();
   
-  // URL BACKEND YANG BENAR (Pakai /api)
+  // URL BACKEND
   const API_BASE_URL = "https://backend-production-b8f3.up.railway.app/api";
 
   const [userName, setUserName] = useState('');
@@ -23,14 +24,19 @@ const Pesanan = () => {
   const [fotoFile, setFotoFile] = useState(null);
 
   useEffect(() => {
-    const userSession = JSON.parse(localStorage.getItem('user_session'));
-    if (userSession) {
-        setUserName(`${userSession.nama_depan} ${userSession.nama_belakang}`);
-        if (userSession.alamat) {
-            setFormData(prev => ({ ...prev, alamat: userSession.alamat }));
+    try {
+        const userSession = JSON.parse(localStorage.getItem('user_session'));
+        if (userSession) {
+            setUserName(`${userSession.nama_depan} ${userSession.nama_belakang}`);
+            if (userSession.alamat) {
+                setFormData(prev => ({ ...prev, alamat: userSession.alamat }));
+            }
+        } else {
+            toast.error("Silakan login terlebih dahulu!");
+            navigate('/login');
         }
-    } else {
-        alert("Silakan login terlebih dahulu!");
+    } catch (error) {
+        console.error("Error parsing session:", error);
         navigate('/login');
     }
   }, [navigate]);
@@ -60,36 +66,36 @@ const Pesanan = () => {
     }
 
     try {
-      // PERBAIKAN: Gunakan URL lengkap dengan /api
       const response = await fetch(`${API_BASE_URL}/pesanan`, {
         method: 'POST',
         body: dataToSend
-        // Jangan set header Content-Type manual, biarkan browser yang atur boundary FormData
+        // Header Content-Type tidak perlu diset manual untuk FormData
       });
 
-      // Cek jika response bukan JSON (misal error HTML dari server)
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-          throw new Error("Server tidak merespon dengan JSON. Cek URL API atau Backend.");
+          throw new Error("Server tidak merespon dengan JSON.");
       }
 
       const result = await response.json();
 
       if (result.success) {
-        alert("✅ Pesanan Berhasil Dibuat!");
-        // Ambil ID pesanan untuk redirect
+        toast.success("Pesanan Berhasil Dibuat!");
+        
+        // Redirect logic: Ke halaman pembayaran atau riwayat
         const orderId = result.orderId || result.insertId || result.data?.id;
         if(orderId) {
             navigate(`/pembayaran/${orderId}`);
         } else {
-            navigate('/riwayat-pesanan');
+            // Jika tidak dapat ID langsung, kembali ke beranda atau halaman lain
+            navigate('/beranda'); 
         }
       } else {
-        alert("❌ Gagal: " + (result.message || "Terjadi kesalahan server"));
+        toast.error("Gagal: " + (result.message || "Terjadi kesalahan server"));
       }
     } catch (error) {
       console.error("Error submit:", error);
-      alert("Gagal terhubung ke server. Pastikan Backend sudah di-deploy dengan benar.");
+      toast.error("Gagal terhubung ke server.");
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +103,6 @@ const Pesanan = () => {
 
   return (
     <div className="max-w-7xl mx-auto min-h-screen relative md:flex font-sans text-slate-800 bg-slate-50">
-      {/* Pastikan Sidebar dirender dengan benar */}
       <Sidebar activeView="pesanan" />
 
       <main className="flex-1 min-h-screen relative overflow-x-hidden pb-24 md:pb-0 p-6 md:p-10">
@@ -112,11 +117,11 @@ const Pesanan = () => {
                 {/* Info User */}
                 <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center text-blue-600 font-bold">
-                        {userName.charAt(0)}
+                        {userName.charAt(0) || 'U'}
                     </div>
                     <div>
                         <p className="text-xs text-blue-500 font-bold uppercase">Pemesan</p>
-                        <p className="font-bold text-slate-700">{userName}</p>
+                        <p className="font-bold text-slate-700">{userName || 'Loading...'}</p>
                     </div>
                 </div>
 
@@ -176,7 +181,7 @@ const Pesanan = () => {
             </form>
         </div>
       </main>
-      <BottomNav setView={() => {}} />
+      <BottomNav />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Wallet, Star, MapPin, Clock, Wrench, ChevronRight, Briefcase } from 'lucide-react';
-import toast from 'react-hot-toast'; // ✅ Tambahkan Toast
+import toast from 'react-hot-toast'; 
 
 // --- KOMPONEN SKELETON (LOADING MOBILE) ---
 const BerandaSkeleton = () => (
@@ -161,12 +161,22 @@ const TukangBeranda = () => {
                                 <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500 border border-orange-100 shrink-0">
                                     <Wrench size={24} />
                                 </div>
-                                <div className="overflow-hidden">
+                                <div className="overflow-hidden w-full">
                                     <h4 className="font-bold text-slate-800 text-sm truncate">{activeJob.kategori_jasa}</h4>
-                                    <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                                    
+                                    {/* ✅ IMPLEMENTASI INTEGRASI PETA DI SINI */}
+                                    <a 
+                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeJob.alamat)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-blue-600 mt-1 flex items-center gap-1 hover:underline cursor-pointer bg-blue-50 w-fit px-2 py-1 rounded-lg"
+                                        title="Buka lokasi di Google Maps"
+                                    >
                                         <MapPin size={12} className="shrink-0" /> 
-                                        <span className="truncate">{activeJob.alamat}</span>
-                                    </p>
+                                        <span className="truncate max-w-[150px]">{activeJob.alamat}</span>
+                                        <span className="text-[10px] font-bold ml-1">↗</span>
+                                    </a>
+
                                     <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
                                         <Clock size={12} className="shrink-0" /> 
                                         <span>{new Date(activeJob.created_at).toLocaleDateString()}</span>
