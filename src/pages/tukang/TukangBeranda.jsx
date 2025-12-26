@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import Footer from '../components/Footer'; 
 import toast from 'react-hot-toast';
-import { API_URL } from '../utils/api'; // ✅ Import API URL
 import { 
   Wallet, Star, CheckCircle, MapPin, 
   Power, Bell, Clock, ThumbsUp 
 } from 'lucide-react';
+
+// ✅ PERBAIKAN IMPORT (Mundur 2 langkah: ../../)
+import Sidebar from '../../components/Sidebar';
+import Footer from '../../components/Footer'; 
+import { API_URL } from '../../utils/api'; 
 
 const TukangBeranda = () => {
   const navigate = useNavigate();
@@ -15,7 +17,6 @@ const TukangBeranda = () => {
   const [isOnline, setIsOnline] = useState(true);
   const [user, setUser] = useState(null);
   
-  // ✅ Ganti Data Dummy dengan State Kosong
   const [orders, setOrders] = useState([]); 
   const [loading, setLoading] = useState(true);
 
@@ -28,30 +29,23 @@ const TukangBeranda = () => {
     }
     setUser(session);
 
-    // ✅ FUNGSI FETCH DATA DARI API
     const fetchOrders = async () => {
         try {
-            // Asumsi endpoint: GET /pesanan/mitra/:id_tukang
-            // Sesuaikan endpoint ini dengan backend Anda, misal: `${API_URL}/pesanan` lalu difilter
             const response = await fetch(`${API_URL}/pesanan`); 
             const result = await response.json();
 
             if (result.success) {
                 // Filter hanya pesanan milik tukang ini
-                // Pastikan backend mengembalikan data: id_tukang, status, rating, ulasan
                 const myOrders = result.data.filter(o => o.id_tukang === session.id);
                 
-                // Format Data agar sesuai tampilan
                 const formattedOrders = myOrders.map(o => ({
                     id: o.id,
-                    customer: o.nama_pelanggan || "Pelanggan", // Sesuaikan nama kolom DB
+                    customer: o.nama_pelanggan || "Pelanggan", 
                     address: o.alamat || "Lokasi tidak tersedia",
                     problem: o.keluhan || "Detail pekerjaan belum diisi",
                     price: `Rp ${parseInt(o.harga || 0).toLocaleString('id-ID')}`,
                     time: new Date(o.created_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}),
-                    status: o.status, // pastikan value: 'baru', 'aktif', 'selesai'
-                    
-                    // ✅ AMBIL RATING & ULASAN ASLI DARI DB
+                    status: o.status, 
                     rating: o.rating ? parseInt(o.rating) : 0, 
                     ulasan: o.ulasan || "" 
                 }));
@@ -69,7 +63,7 @@ const TukangBeranda = () => {
     fetchOrders();
   }, [navigate]);
 
-  // Statistik (Bisa dibuat dinamis juga nanti)
+  // Statistik
   const stats = [
     { label: 'Pendapatan', value: 'Rp 150rb', icon: Wallet, color: 'bg-green-100 text-green-600' },
     { label: 'Rating', value: '4.8', icon: Star, color: 'bg-amber-100 text-amber-600' },
@@ -83,7 +77,6 @@ const TukangBeranda = () => {
     toast.success(isOnline ? "Mode Istirahat (Offline)" : "Anda Online! Siap terima order.");
   };
 
-  // Render Loading jika data belum siap
   if (!user || loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-400">Memuat Dashboard...</div>;
 
   return (
@@ -174,7 +167,7 @@ const TukangBeranda = () => {
                           </div>
                        </div>
 
-                       {/* ✅ TAMPILAN ULASAN DARI DB */}
+                       {/* TAMPILAN ULASAN DARI DB */}
                        {job.status === 'selesai' && job.rating > 0 ? (
                            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mt-4">
                                <div className="flex items-center gap-2 mb-2">
@@ -187,7 +180,6 @@ const TukangBeranda = () => {
                                        {job.rating}/5
                                    </span>
                                </div>
-                               {/* Tampilkan ulasan jika ada, jika tidak tampilkan default */}
                                <p className="text-sm text-slate-700 italic">
                                    "{job.ulasan && job.ulasan !== "" ? job.ulasan : "Pelanggan memberikan rating tanpa ulasan tertulis."}"
                                </p>
