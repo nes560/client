@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast'; // ✅ 1. IMPORT TOASTER AGAR NOTIFIKASI MUNCUL
+import { Toaster } from 'react-hot-toast'; // ✅ 1. IMPORT TOASTER
 
 // === IMPORT HALAMAN USER (PELANGGAN) ===
 import Home from './pages/Home';
@@ -15,8 +15,7 @@ import Pembayaran from './pages/Pembayaran';
 
 // === IMPORT HALAMAN TUKANG (MITRA) ===
 import TukangLayout from './components/TukangLayout';
-import TukangBeranda from './pages/tukang/TukangBeranda'; // Pastikan file ini ada (dulu namanya TukangDashboard)
-import TukangDashboard from './pages/tukang/TukangDashboard'; // Menggunakan file Dashboard yang baru kita update
+import TukangBeranda from './pages/tukang/TukangBeranda'; // ✅ Gunakan file Beranda yang sudah kita perbaiki
 import TukangOrderan from './pages/tukang/TukangOrderan';
 import TukangAkun from './pages/tukang/TukangAkun';
 import TukangNotifikasi from './pages/tukang/TukangNotifikasi';
@@ -28,7 +27,7 @@ import AdminDashboard from './AdminDashboard';
 function App() {
   return (
     <Router>
-      {/* ✅ 2. PASANG KOMPONEN TOASTER DI SINI (GLOBAL) */}
+      {/* ✅ 2. TOASTER GLOBAL UNTUK NOTIFIKASI */}
       <Toaster position="top-center" reverseOrder={false} />
 
       <Routes>
@@ -57,12 +56,14 @@ function App() {
         {/* ========================================= */}
         {/* RUTE TUKANG (MITRA)                       */}
         {/* ========================================= */}
-        {/* Note: Kita arahkan /tukang ke TukangDashboard yang baru */}
         <Route path="/tukang" element={<TukangLayout />}>
-            <Route index element={<TukangDashboard />} /> 
+            {/* ✅ Redirect default ke TukangBeranda (Tampilan Mobile) */}
+            <Route index element={<TukangBeranda />} /> 
             
-            <Route path="beranda" element={<TukangDashboard />} /> 
-            <Route path="dashboard" element={<TukangDashboard />} />
+            <Route path="beranda" element={<TukangBeranda />} /> 
+            
+            {/* Opsional: Dashboard Desktop jika masih dibutuhkan */}
+            {/* <Route path="dashboard" element={<TukangDashboard />} /> */}
             
             <Route path="orderan" element={<TukangOrderan />} />
             <Route path="chat" element={<TukangChat />} />
