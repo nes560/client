@@ -65,15 +65,15 @@ const Footer = ({ variant = 'dark' }) => {
             <ul className="space-y-4 text-sm">
               <li className="flex items-start gap-3">
                 <MapPin size={18} className="text-blue-500 mt-0.5" />
-                <span>Jl. Teknologi No. 10, Jakarta Selatan, Indonesia</span>
+                <span>Jl. Kali Gunting No.70, Tanjungsari, Kota Blitar, Jawa Timur</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone size={18} className="text-blue-500" />
-                <span>+62 812-3456-7890</span>
+                <span>+62 858-1028-6087</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail size={18} className="text-blue-500" />
-                <span>support@handyman.id</span>
+                <span>hpb30227@gmail.com</span>
               </li>
             </ul>
           </div>
