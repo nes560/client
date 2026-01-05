@@ -63,12 +63,19 @@ const TukangBeranda = () => {
             if (result.success) {
                 const allOrders = result.data;
 
-                // 1. LOGIKA PEKERJAAN AKTIF
-                const currentJob = allOrders
-                    .filter(o => o.status === 'Diproses')
-                    .sort((a, b) => b.id - a.id)[0];
-                
-                setActiveJob(currentJob || null);
+                // ... di dalam useEffect ...
+
+// 1. LOGIKA PEKERJAAN AKTIF
+const currentJob = allOrders
+    .filter(o => 
+        // Cek berbagai kemungkinan status yang artinya "Sedang Dikerjakan"
+        ['Diproses', 'Proses', 'proses', 'dikirim', 'working'].includes(o.status)
+    )
+    .sort((a, b) => b.id - a.id)[0];
+
+setActiveJob(currentJob || null);
+
+// ...
 
                 // 2. LOGIKA STATISTIK
                 const completedOrders = allOrders.filter(o => o.status === 'Selesai');
