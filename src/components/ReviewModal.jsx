@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 
 const ReviewModal = ({ orderId, onClose, onSuccess }) => {
   // URL Backend
-  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
+  const API_URL = "https://backend-sigma-nine-12.vercel.app/api";
 
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);

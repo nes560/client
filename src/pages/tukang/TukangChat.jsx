@@ -5,7 +5,7 @@ const TukangChat = () => {
 
   // --- PERBAIKAN DI SINI ---
   // 1. Kita kunci URL ke Railway agar tidak nyasar ke Localhost lagi
-  const API_URL = "https://backend-production-b8f3.up.railway.app/api"; 
+  const API_URL = "https://backend-sigma-nine-12.vercel.app/api"; 
   
   // 2. ID Admin = 28 (Sesuai dengan gambar database Anda)
   const ADMIN_ID = 28; 

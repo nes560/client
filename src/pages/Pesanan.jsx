@@ -8,7 +8,7 @@ const Pesanan = () => {
   const navigate = useNavigate();
   
   // URL BACKEND
-  const API_BASE_URL = "https://backend-production-b8f3.up.railway.app/api";
+  const API_BASE_URL = "https://backend-sigma-nine-12.vercel.app/api";
 
   const [userName, setUserName] = useState('');
   const [isLoading, setIsLoading] = useState(false);

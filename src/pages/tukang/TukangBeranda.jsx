@@ -23,7 +23,7 @@ const BerandaSkeleton = () => (
 
 const TukangBeranda = () => {
   const navigate = useNavigate();
-  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
+  const API_URL = "https://backend-sigma-nine-12.vercel.app/api";
 
   const [user, setUser] = useState({ nama_depan: 'Mitra', nama_belakang: '' });
   const [activeJob, setActiveJob] = useState(null);

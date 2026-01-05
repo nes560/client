@@ -3,7 +3,7 @@ import { MapPin, Check, X, Calendar, User, AlertCircle } from 'lucide-react';
 
 const TukangOrderan = () => {
   // 1. URL Railway
-  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
+  const API_URL = "https://backend-sigma-nine-12.vercel.app/api";
 
   const [activeTab, setActiveTab] = useState('pending');
   const [orders, setOrders] = useState([]);

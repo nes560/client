@@ -8,7 +8,7 @@ import ReviewModal from '../components/ReviewModal'; // Import Modal tadi
 
 const RiwayatPesanan = () => {
   const navigate = useNavigate();
-  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
+  const API_URL = "https://backend-sigma-nine-12.vercel.app/api";
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);

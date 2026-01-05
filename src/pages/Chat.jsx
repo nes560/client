@@ -30,7 +30,7 @@ const Chat = () => {
 
     try {
       // PERBAIKAN FINAL: Tulis URL Lengkap secara manual agar tidak meleset
-      const response = await fetch("https://backend-production-b8f3.up.railway.app/api/chats");
+      const response = await fetch("https://backend-sigma-nine-12.vercel.app/api/chats");
       
       const result = await response.json();
 
@@ -70,7 +70,7 @@ const Chat = () => {
 
     try {
       // PERBAIKAN FINAL: Tulis URL Lengkap secara manual
-      await fetch("https://backend-production-b8f3.up.railway.app/api/chats", {
+      await fetch("https://backend-sigma-nine-12.vercel.app/api/chats", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

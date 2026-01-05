@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const TukangAkun = () => {
   const navigate = useNavigate();
   // URL Backend
-  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
+  const API_URL = "https://backend-sigma-nine-12.vercel.app/api";
 
   // State untuk Data User & Tampilan
   const [user, setUser] = useState({

@@ -1,7 +1,7 @@
 // File: src/utils/api.js
 
 // URL Backend Railway Anda (Jangan diubah-ubah lagi)
-export const API_URL = "https://backend-production-b8f3.up.railway.app";
+export const API_URL = "https://backend-sigma-nine-12.vercel.app/api";
 
 // Fungsi Login / Register (POST)
 export const postData = async (endpoint, data) => {

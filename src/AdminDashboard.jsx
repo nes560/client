@@ -15,7 +15,7 @@ const AdminDashboard = () => {
   const chatEndRef = useRef(null);
 
   // --- CONFIG ---
-  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
+  const API_URL = "https://backend-sigma-nine-12.vercel.app/api";
 
   // --- STATE UTAMA ---
   const [activeTab, setActiveTab] = useState('dashboard');

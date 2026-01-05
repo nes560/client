@@ -7,7 +7,7 @@ const Pembayaran = () => {
   const navigate = useNavigate();
 
   // 1. URL BACKEND (Hardcoded agar pasti jalan)
-  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
+  const API_URL = "https://backend-sigma-nine-12.vercel.app/api";
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);

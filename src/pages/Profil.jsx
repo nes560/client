@@ -6,7 +6,7 @@ import BottomNav from '../components/BottomNav';
 
 const Profil = () => {
   const navigate = useNavigate();
-  const API_URL = "https://backend-production-b8f3.up.railway.app/api";
+  const API_URL = "https://backend-sigma-nine-12.vercel.app/api";
 
   // State User & Tampilan (Logic sama persis dengan Tukang)
   const [user, setUser] = useState({
