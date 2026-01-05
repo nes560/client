@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { postData } from '../utils/api'; 
 
 // ✅ IMPORT GAMBAR LOCAL
-// Pastikan file bground.jpg ada di folder src/assets
 import bgImage from '../assets/bground.jpg'; 
 
 const Login = () => {
@@ -28,7 +27,9 @@ const Login = () => {
     setErrorMsg('');
 
     try {
-      const result = await postData('/api/login', formData);
+      // ⚠️ PERBAIKAN DISINI: Hapus '/api' di depan, cukup '/login'
+      // Karena base URL di utils/api.js biasanya sudah mengandung '/api'
+      const result = await postData('/login', formData);
 
       if (result && result.success) {
         localStorage.setItem('user_session', JSON.stringify(result.user));
@@ -47,7 +48,8 @@ const Login = () => {
 
     } catch (error) {
       console.error("Error Login:", error);
-      setErrorMsg('Gagal terhubung ke server.');
+      // Pesan error lebih ramah
+      setErrorMsg('Gagal terhubung ke server (Cek koneksi internet).');
     } finally {
       setIsLoading(false);
     }
@@ -57,13 +59,11 @@ const Login = () => {
     <div 
       className="min-h-screen w-full flex items-center justify-center bg-cover bg-center font-sans relative"
       style={{ 
-        // ✅ PERBAIKAN SINTAKS DI SINI:
-        // Menggunakan backticks (`), nama variabel yang benar (bgImage), dan penutup kurung kurawal yang lengkap
         backgroundImage: `url(${bgImage})`,
       }}
     >
       
-      {/* Overlay Hitam (Agar tulisan terbaca jelas) */}
+      {/* Overlay Hitam */}
       <div className="absolute inset-0 bg-black/60"></div>
 
       {/* Tombol Kembali */}
