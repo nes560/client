@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Ganti URL di bawah ini dengan link Vercel Anda yang terbaru
+Sitemap: https://client-henna-alpha-77.vercel.app/sitemap.xml
