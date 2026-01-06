@@ -2,12 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, Check, X, Calendar, User, AlertCircle } from 'lucide-react';
 
 const TukangOrderan = () => {
-  // 1. URL Railway
+  // 1. URL Backend
   const API_URL = "https://backend-sigma-nine-12.vercel.app/api";
 
   const [activeTab, setActiveTab] = useState('pending');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // --- FUNGSI HELPER UNTUK URL GAMBAR (PERBAIKAN DISINI) ---
+  const getFotoUrl = (imagePath) => {
+    if (!imagePath) return null;
+    // Jika link sudah lengkap (dari Cloudinary), pakai langsung
+    if (imagePath.startsWith('http')) {
+        return imagePath;
+    }
+    // Jika tidak, asumsikan file lokal (data lama)
+    return `${API_URL}/../uploads/${imagePath}`;
+  };
 
   // FETCH ORDERS
   const fetchOrders = async () => {
@@ -17,31 +28,23 @@ const TukangOrderan = () => {
       const result = await response.json();
       
       if (result.success) {
-        console.log("Semua Data Order:", result.data); // Debugging di Console
-
-        // --- LOGIKA FILTER YANG LEBIH KUAT ---
+        // --- LOGIKA FILTER ---
         const filtered = result.data.filter(o => {
-            // Ubah status jadi huruf kecil semua biar tidak sensitif huruf besar/kecil
             const status = o.status ? o.status.toLowerCase() : ''; 
             
             if (activeTab === 'pending') {
-                // Masukkan semua yang berbau "menunggu" atau "pending" atau "baru"
                 return status.includes('menunggu') || status === 'pending' || status === 'baru';
             } 
             else if (activeTab === 'proses') {
-                // Masukkan semua yang ada kata "proses" atau "bayar" (jika sudah dibayar dianggap proses)
                 return status.includes('proses') || status.includes('bayar') || status === 'diproses';
             } 
             else if (activeTab === 'selesai') {
-                // Masukkan selesai, batal, atau tolak
                 return status.includes('selesai') || status.includes('batal') || status.includes('tolak');
             }
             return false;
         });
         
-        // Urutkan dari ID Terbesar (Terbaru) ke Terkecil (Terlama)
         const sortedOrders = filtered.sort((a, b) => b.id - a.id);
-        
         setOrders(sortedOrders);
       }
     } catch (error) {
@@ -73,7 +76,7 @@ const TukangOrderan = () => {
         
         if(result.success) {
             alert('Status berhasil diperbarui!');
-            fetchOrders(); // Refresh data otomatis
+            fetchOrders(); 
         }
     } catch(err) {
         alert('Gagal update status. Cek koneksi internet.');
@@ -115,19 +118,23 @@ const TukangOrderan = () => {
                   {orders.map(order => (
                       <div key={order.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition relative">
                           
-                          {/* Label Status Real dari Database (Debug Helper) */}
+                          {/* Label Status */}
                           <div className="absolute top-4 right-4 text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-500">
                              Status: {order.status}
                           </div>
 
-                          {/* Foto Masalah (Jika Ada) */}
+                          {/* Foto Masalah (DIPERBAIKI) */}
                           {order.foto_masalah && (
                              <div className="mb-3 rounded-lg overflow-hidden h-32 bg-slate-100 relative group mt-6">
                                 <img 
-                                    src={`${API_URL}/../uploads/${order.foto_masalah}`} 
+                                    src={getFotoUrl(order.foto_masalah)} 
                                     alt="Kerusakan" 
                                     className="w-full h-full object-cover"
-                                    onError={(e) => {e.target.style.display='none'}}
+                                    onError={(e) => {
+                                        // Fallback jika gambar error/tidak ketemu
+                                        e.target.onerror = null; 
+                                        e.target.src = "https://placehold.co/400x300?text=Gambar+Rusak";
+                                    }}
                                 />
                              </div>
                           )}
@@ -158,7 +165,7 @@ const TukangOrderan = () => {
                               <span>{order.alamat || "Alamat tidak tersedia"}</span>
                           </p>
 
-                          {/* ACTION BUTTONS BERDASARKAN TAB */}
+                          {/* ACTION BUTTONS */}
                           <div className="flex gap-2 pt-3 border-t border-slate-50">
                               {activeTab === 'pending' && (
                                   <>
