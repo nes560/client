@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2'; // ✅ Import SweetAlert2
 
 const Sidebar = ({ activeView, setView }) => {
   const navigate = useNavigate();
@@ -12,6 +13,28 @@ const Sidebar = ({ activeView, setView }) => {
     } else {
       navigate('/beranda'); // Pindah ke /beranda, bukan /
     }
+  };
+
+  // ✅ FUNGSI LOGOUT CANTIK
+  const handleLogout = () => {
+    Swal.fire({
+        title: 'Yakin ingin keluar?',
+        text: "Sesi Anda akan diakhiri.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33', // Merah untuk bahaya/logout
+        cancelButtonColor: '#3085d6', // Biru untuk batal
+        confirmButtonText: 'Ya, Keluar',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Hapus data sesi
+            localStorage.removeItem('user_session');
+            // Arahkan ke halaman login
+            navigate('/login');
+        }
+    });
   };
 
   const isActive = (viewName, path) => {
@@ -29,7 +52,7 @@ const Sidebar = ({ activeView, setView }) => {
 
       <nav className="space-y-2 flex-1">
         
-        {/* Tombol Beranda mengarah ke /beranda */}
+        {/* Tombol Beranda */}
         <button 
           onClick={handleHomeClick} 
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${isActive('home', '/beranda') && !isActive('category') ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-50'}`}
@@ -55,13 +78,22 @@ const Sidebar = ({ activeView, setView }) => {
       </nav>
 
       <div className="mt-auto pt-6 border-t border-slate-100">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold text-xs">PS</div>
           <div>
             <p className="text-sm font-bold text-slate-700">Pelanggan Setia</p>
             <p className="text-xs text-slate-400">Premium Member</p>
           </div>
         </div>
+
+        {/* ✅ TOMBOL LOGOUT BARU */}
+        <button 
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+            Keluar
+        </button>
       </div>
     </aside>
   );

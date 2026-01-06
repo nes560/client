@@ -2,17 +2,30 @@ import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 // Tambahkan ikon MessageSquare untuk Chat
 import { Home, ClipboardList, Bell, User, LogOut, Wrench, MessageSquare } from 'lucide-react';
+import Swal from 'sweetalert2'; // ✅ Import SweetAlert2
 
 const TukangLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Fungsi Logout
+  // ✅ Fungsi Logout dengan SweetAlert2
   const handleLogout = () => {
-    if (window.confirm('Akhiri sesi kerja?')) {
-      localStorage.removeItem('user_session');
-      navigate('/login');
-    }
+    Swal.fire({
+        title: 'Akhiri sesi kerja?',
+        text: "Anda harus login ulang untuk mengambil orderan lagi.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33', // Merah untuk logout
+        cancelButtonColor: '#3085d6', // Biru untuk batal
+        confirmButtonText: 'Ya, Keluar',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            localStorage.removeItem('user_session');
+            navigate('/login');
+        }
+    });
   };
 
   // Helper untuk mengecek menu aktif

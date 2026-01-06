@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { postData } from '../utils/api'; 
+import toast from 'react-hot-toast'; // ✅ 1. Import Toast
 
 // ✅ IMPORT GAMBAR LOCAL
 import bgImage from '../assets/bground.jpg'; 
@@ -14,42 +15,52 @@ const Login = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setErrorMsg(''); 
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setErrorMsg('');
+    
+    // ✅ Tampilkan Loading Toast
+    const loadingToast = toast.loading('Sedang memproses...');
 
     try {
       // ⚠️ PERBAIKAN DISINI: Hapus '/api' di depan, cukup '/login'
-      // Karena base URL di utils/api.js biasanya sudah mengandung '/api'
       const result = await postData('/login', formData);
 
+      // Hapus loading toast saat selesai
+      toast.dismiss(loadingToast);
+
       if (result && result.success) {
+        // ✅ SUKSES: Tampilkan Toast Hijau
+        toast.success("Login Berhasil! Selamat Datang.");
+        
         localStorage.setItem('user_session', JSON.stringify(result.user));
         
-        if (result.user.tipe_pengguna === 'admin') {
-            navigate('/admin');
-        } else if (result.user.tipe_pengguna === 'tukang') {
-            navigate('/tukang');
-        } else {
-            navigate('/beranda');
-        }
+        // Beri sedikit delay sebelum pindah halaman agar toast terbaca
+        setTimeout(() => {
+            if (result.user.tipe_pengguna === 'admin') {
+                navigate('/admin');
+            } else if (result.user.tipe_pengguna === 'tukang') {
+                navigate('/tukang');
+            } else {
+                navigate('/beranda');
+            }
+        }, 1000);
 
       } else {
-        setErrorMsg(result?.message || 'Login Gagal. Cek email & password.');
+        // ❌ GAGAL: Tampilkan Toast Merah
+        toast.error(result?.message || 'Login Gagal. Cek email & password.');
       }
 
     } catch (error) {
+      toast.dismiss(loadingToast);
       console.error("Error Login:", error);
-      // Pesan error lebih ramah
-      setErrorMsg('Gagal terhubung ke server (Cek koneksi internet).');
+      // ❌ ERROR JARINGAN
+      toast.error('Gagal terhubung ke server (Cek koneksi internet).');
     } finally {
       setIsLoading(false);
     }
@@ -82,14 +93,7 @@ const Login = () => {
           <p className="text-slate-500">Silakan login untuk melanjutkan</p>
         </div>
 
-        {/* Notifikasi Error */}
-        {errorMsg && (
-            <div className="bg-red-50 border-l-4 border-red-500 text-red-600 p-3 mb-4 rounded text-sm font-medium animate-pulse flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-                {errorMsg}
-            </div>
-        )}
-
+        {/* Form Login */}
         <form onSubmit={handleLogin} className="space-y-5">
           
           {/* Input Email */}

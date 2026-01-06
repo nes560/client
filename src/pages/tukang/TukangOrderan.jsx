@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Check, X, Calendar, User, AlertCircle } from 'lucide-react';
+import Swal from 'sweetalert2'; // ✅ Import SweetAlert2
+import toast from 'react-hot-toast'; // ✅ Import Toast
 
 const TukangOrderan = () => {
   // 1. URL Backend
@@ -9,14 +11,12 @@ const TukangOrderan = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // --- FUNGSI HELPER UNTUK URL GAMBAR (PERBAIKAN DISINI) ---
+  // --- FUNGSI HELPER UNTUK URL GAMBAR ---
   const getFotoUrl = (imagePath) => {
     if (!imagePath) return null;
-    // Jika link sudah lengkap (dari Cloudinary), pakai langsung
     if (imagePath.startsWith('http')) {
         return imagePath;
     }
-    // Jika tidak, asumsikan file lokal (data lama)
     return `${API_URL}/../uploads/${imagePath}`;
   };
 
@@ -49,6 +49,7 @@ const TukangOrderan = () => {
       }
     } catch (error) {
       console.error("Gagal ambil order:", error);
+      toast.error("Gagal memuat data orderan"); // Tambahan notifikasi error
     } finally {
       setLoading(false);
     }
@@ -58,28 +59,73 @@ const TukangOrderan = () => {
     fetchOrders();
   }, [activeTab]);
 
-  // UPDATE STATUS
+  // ✅ UPDATE STATUS (DIPERBAIKI DENGAN SWEETALERT & TOAST)
   const handleUpdateStatus = async (id, newStatus) => {
-    const confirmMessage = newStatus === 'Diproses' ? "Terima pekerjaan ini?" : 
-                           newStatus === 'Selesai' ? "Selesaikan pekerjaan ini?" : 
-                           "Tolak pekerjaan ini?";
-                           
-    if(!window.confirm(confirmMessage)) return;
+    
+    // 1. Tentukan Pesan Popup berdasarkan Status
+    let title = "";
+    let text = "";
+    let icon = "question";
+    let confirmButtonColor = "#3085d6";
 
-    try {
-        const response = await fetch(`${API_URL}/pesanan/${id}/status`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
-        });
-        const result = await response.json();
+    if (newStatus === 'Diproses') {
+        title = "Terima Pekerjaan Ini?";
+        text = "Anda akan mulai mengerjakan orderan ini.";
+        icon = "info";
+        confirmButtonColor = "#f97316"; // Orange
+    } else if (newStatus === 'Selesai') {
+        title = "Selesaikan Pekerjaan?";
+        text = "Pastikan pekerjaan sudah beres dan diterima pelanggan.";
+        icon = "success";
+        confirmButtonColor = "#22c55e"; // Hijau
+    } else if (newStatus === 'Dibatalkan') {
+        title = "Tolak Pekerjaan?";
+        text = "Orderan akan hilang dari daftar Anda.";
+        icon = "warning";
+        confirmButtonColor = "#ef4444"; // Merah
+    }
+
+    // 2. Tampilkan Popup Konfirmasi
+    const result = await Swal.fire({
+        title: title,
+        text: text,
+        icon: icon,
+        showCancelButton: true,
+        confirmButtonColor: confirmButtonColor,
+        cancelButtonColor: '#64748b', // Warna tombol batal (Slate)
+        confirmButtonText: 'Ya, Lanjutkan!',
+        cancelButtonText: 'Batal'
+    });
+
+    // 3. Jika user klik "Ya"
+    if (result.isConfirmed) {
+        const loadingToast = toast.loading('Memproses...'); // Tampilkan loading
         
-        if(result.success) {
-            alert('Status berhasil diperbarui!');
-            fetchOrders(); 
+        try {
+            const response = await fetch(`${API_URL}/pesanan/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+            const apiResult = await response.json();
+            
+            toast.dismiss(loadingToast); // Tutup loading
+
+            if(apiResult.success) {
+                // Tampilkan Sukses Besar
+                Swal.fire(
+                    'Berhasil!',
+                    `Status orderan telah diubah menjadi ${newStatus}.`,
+                    'success'
+                );
+                fetchOrders(); // Refresh data otomatis
+            } else {
+                toast.error(apiResult.message || "Gagal update status");
+            }
+        } catch(err) {
+            toast.dismiss(loadingToast);
+            toast.error('Gagal koneksi ke server. Cek internet.');
         }
-    } catch(err) {
-        alert('Gagal update status. Cek koneksi internet.');
     }
   };
 
@@ -123,7 +169,7 @@ const TukangOrderan = () => {
                              Status: {order.status}
                           </div>
 
-                          {/* Foto Masalah (DIPERBAIKI) */}
+                          {/* Foto Masalah */}
                           {order.foto_masalah && (
                              <div className="mb-3 rounded-lg overflow-hidden h-32 bg-slate-100 relative group mt-6">
                                 <img 
@@ -131,7 +177,6 @@ const TukangOrderan = () => {
                                     alt="Kerusakan" 
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                        // Fallback jika gambar error/tidak ketemu
                                         e.target.onerror = null; 
                                         e.target.src = "https://placehold.co/400x300?text=Gambar+Rusak";
                                     }}
