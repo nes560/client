@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, ArrowLeft, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2'; // ✅ Import SweetAlert2
+import toast from 'react-hot-toast'; // ✅ Import Toast
 
 const TukangAkun = () => {
   const navigate = useNavigate();
@@ -24,18 +26,32 @@ const TukangAkun = () => {
     }
   }, [navigate]);
 
-  // 2. Fungsi Logout
+  // 2. Fungsi Logout (DIPERBAIKI DENGAN SWEETALERT)
   const handleLogout = () => {
-    if(window.confirm("Keluar dari aplikasi?")) {
-        localStorage.removeItem('user_session');
-        navigate('/login');
-    }
+    Swal.fire({
+        title: 'Keluar dari aplikasi?',
+        text: "Anda harus login ulang untuk masuk kembali.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33', // Merah
+        cancelButtonColor: '#3085d6', // Biru
+        confirmButtonText: 'Ya, Keluar',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            localStorage.removeItem('user_session');
+            navigate('/login');
+        }
+    });
   };
 
-  // 3. Fungsi Update Profil
+  // 3. Fungsi Update Profil (DIPERBAIKI DENGAN TOAST)
   const handleUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
+    const loadingToast = toast.loading('Menyimpan perubahan...'); // ✅ Loading
+
     try {
         const response = await fetch(`${API_URL}/users/${user.id}`, {
             method: 'PUT',
@@ -48,16 +64,22 @@ const TukangAkun = () => {
             })
         });
         const result = await response.json();
+        
+        toast.dismiss(loadingToast); // Tutup loading
+
         if(result.success) {
-            alert("Profil berhasil disimpan!");
+            // ✅ Sukses
+            toast.success("Profil berhasil disimpan!");
             localStorage.setItem('user_session', JSON.stringify(result.user));
             setUser(result.user);
             setView('menu'); // Kembali ke menu awal
         } else {
-            alert("Gagal: " + result.message);
+            // ❌ Gagal
+            toast.error("Gagal: " + result.message);
         }
     } catch (err) {
-        alert("Gagal koneksi server");
+        toast.dismiss(loadingToast);
+        toast.error("Gagal koneksi server");
     } finally {
         setLoading(false);
     }
@@ -85,7 +107,7 @@ const TukangAkun = () => {
                         <label className="block text-sm font-medium text-slate-700 mb-1">Alamat</label>
                         <textarea value={user.alamat || ''} onChange={e=>setUser({...user, alamat: e.target.value})} className="w-full p-2 border border-slate-300 rounded-lg"/>
                     </div>
-                    <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700">
+                    <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition">
                         {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
                     </button>
                 </form>
@@ -120,7 +142,7 @@ const TukangAkun = () => {
       );
   }
 
-  // --- VIEW UTAMA (SESUAI REQUEST AWAL) ---
+  // --- VIEW UTAMA ---
   return (
     <div className="pb-24 md:pb-0">
        <div className="px-6 pt-8 pb-4 bg-white md:bg-transparent md:px-0">
@@ -129,36 +151,36 @@ const TukangAkun = () => {
 
        <div className="p-4 md:p-0">
            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                {/* Header Profil */}
-                <div className="p-4 flex items-center gap-4 border-b border-slate-50">
-                    <img 
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.nama_depan}`} 
-                        className="w-16 h-16 rounded-full bg-slate-100" 
-                        alt="Profil"
-                    />
-                    <div>
-                        <h2 className="font-bold text-lg text-slate-800 capitalize">{user.nama_depan} {user.nama_belakang}</h2>
-                        <p className="text-sm text-blue-600 font-medium">Mitra Terverifikasi</p>
-                    </div>
-                </div>
+               {/* Header Profil */}
+               <div className="p-4 flex items-center gap-4 border-b border-slate-50">
+                   <img 
+                       src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.nama_depan}`} 
+                       className="w-16 h-16 rounded-full bg-slate-100" 
+                       alt="Profil"
+                   />
+                   <div>
+                       <h2 className="font-bold text-lg text-slate-800 capitalize">{user.nama_depan} {user.nama_belakang}</h2>
+                       <p className="text-sm text-blue-600 font-medium">Mitra Terverifikasi</p>
+                   </div>
+               </div>
 
-                {/* Menu List */}
-                <div className="divide-y divide-slate-50">
-                    <MenuItem label="Kelola Profil" onClick={() => setView('edit')} />
-                    <MenuItem label="Rekening Bank" onClick={() => setView('bank')} />
-                    <MenuItem label="Riwayat Saldo" onClick={() => setView('bank')} />
-                    
-                    <div className="bg-slate-50 px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wide">Pengaturan</div>
-                    
-                    <MenuItem label="Notifikasi" onClick={() => alert("Tidak ada notifikasi baru")} />
-                    <MenuItem label="Bantuan" onClick={() => alert("Hubungi Admin via Chat")} />
-                    
-                    {/* Tambahan Tombol Logout di dalam list agar rapi */}
-                    <button onClick={handleLogout} className="w-full flex justify-between items-center p-4 hover:bg-red-50 transition text-red-500 text-sm font-medium text-left">
-                        Keluar Aplikasi
-                        <LogOut size={16} />
-                    </button>
-                </div>
+               {/* Menu List */}
+               <div className="divide-y divide-slate-50">
+                   <MenuItem label="Kelola Profil" onClick={() => setView('edit')} />
+                   <MenuItem label="Rekening Bank" onClick={() => setView('bank')} />
+                   <MenuItem label="Riwayat Saldo" onClick={() => setView('bank')} />
+                   
+                   <div className="bg-slate-50 px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wide">Pengaturan</div>
+                   
+                   <MenuItem label="Notifikasi" onClick={() => toast("Tidak ada notifikasi baru", {icon: '🔕'})} />
+                   <MenuItem label="Bantuan" onClick={() => toast("Hubungi Admin via Chat", {icon: '💬'})} />
+                   
+                   {/* Tombol Logout */}
+                   <button onClick={handleLogout} className="w-full flex justify-between items-center p-4 hover:bg-red-50 transition text-red-500 text-sm font-medium text-left">
+                       Keluar Aplikasi
+                       <LogOut size={16} />
+                   </button>
+               </div>
            </div>
            
            <p className="text-center text-xs text-slate-400 mt-6">Versi Aplikasi 1.0.5</p>
@@ -167,7 +189,7 @@ const TukangAkun = () => {
   );
 };
 
-// Komponen Item Menu Sederhana (Sesuai Desain Awal)
+// Komponen Item Menu Sederhana
 const MenuItem = ({ label, onClick }) => (
     <button onClick={onClick} className="w-full flex justify-between items-center p-4 hover:bg-slate-50 transition text-slate-700 text-sm font-medium text-left">
         {label}

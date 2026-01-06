@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ArrowLeft, LogOut, User, MapPin } from 'lucide-react';
+import { ChevronRight, ArrowLeft, LogOut } from 'lucide-react';
+import Swal from 'sweetalert2'; // ✅ Import SweetAlert2
+import toast from 'react-hot-toast'; // ✅ Import Toast
 import Sidebar from '../components/Sidebar';
 import BottomNav from '../components/BottomNav';
 
@@ -8,7 +10,7 @@ const Profil = () => {
   const navigate = useNavigate();
   const API_URL = "https://backend-sigma-nine-12.vercel.app/api";
 
-  // State User & Tampilan (Logic sama persis dengan Tukang)
+  // State User & Tampilan
   const [user, setUser] = useState({
       id: '', nama_depan: '', nama_belakang: '', email: '', alamat: ''
   });
@@ -25,18 +27,32 @@ const Profil = () => {
     }
   }, [navigate]);
 
-  // 2. Fungsi Logout
+  // 2. Fungsi Logout (DIPERBAIKI DENGAN SWEETALERT)
   const handleLogout = () => {
-    if(window.confirm("Yakin ingin keluar aplikasi?")) {
-        localStorage.removeItem('user_session');
-        navigate('/login');
-    }
+    Swal.fire({
+        title: 'Yakin ingin keluar?',
+        text: "Sesi Anda akan diakhiri.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33', // Merah
+        cancelButtonColor: '#3085d6', // Biru
+        confirmButtonText: 'Ya, Keluar',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            localStorage.removeItem('user_session');
+            navigate('/login');
+        }
+    });
   };
 
-  // 3. Fungsi Update Profil
+  // 3. Fungsi Update Profil (DIPERBAIKI DENGAN TOAST)
   const handleUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
+    const loadingToast = toast.loading('Menyimpan perubahan...'); // ✅ Loading Toast
+
     try {
         const response = await fetch(`${API_URL}/users/${user.id}`, {
             method: 'PUT',
@@ -49,16 +65,25 @@ const Profil = () => {
             })
         });
         const result = await response.json();
+        
+        toast.dismiss(loadingToast); // Tutup loading
+
         if(result.success) {
-            alert("✅ Profil berhasil disimpan!");
+            // ✅ Sukses Toast
+            toast.success("Profil berhasil diperbarui!", {
+                duration: 4000,
+                icon: '✅'
+            });
             localStorage.setItem('user_session', JSON.stringify(result.user));
             setUser(result.user);
             setView('menu'); // Kembali ke menu utama
         } else {
-            alert("Gagal: " + result.message);
+            // ❌ Gagal Toast
+            toast.error(result.message || "Gagal memperbarui profil");
         }
     } catch (err) {
-        alert("Gagal koneksi server");
+        toast.dismiss(loadingToast);
+        toast.error("Gagal koneksi ke server. Cek internet.");
     } finally {
         setLoading(false);
     }
@@ -134,17 +159,16 @@ const Profil = () => {
                     </div>
                 </div>
 
-                {/* List Menu (Persis Tukang) */}
+                {/* List Menu */}
                 <div className="divide-y divide-slate-50">
                     <MenuItem label="Kelola Profil" onClick={() => setView('edit')} />
                     
-                    {/* Pelanggan biasanya melihat Riwayat Pesanan, bukan Saldo */}
                     <MenuItem label="Riwayat Pesanan Saya" onClick={() => navigate('/riwayat-pesanan')} />
                     
                     <div className="bg-slate-50 px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wide">Pengaturan</div>
                     
-                    <MenuItem label="Notifikasi" onClick={() => alert("Tidak ada notifikasi")} />
-                    <MenuItem label="Pusat Bantuan" onClick={() => alert("Chat Admin untuk bantuan")} />
+                    <MenuItem label="Notifikasi" onClick={() => toast("Tidak ada notifikasi baru", { icon: '🔕' })} />
+                    <MenuItem label="Pusat Bantuan" onClick={() => toast("Fitur Bantuan segera hadir!", { icon: '🚧' })} />
                     
                     {/* Logout di dalam List */}
                     <button onClick={handleLogout} className="w-full flex justify-between items-center px-6 py-4 hover:bg-red-50 transition text-red-500 text-sm font-bold text-left group">
