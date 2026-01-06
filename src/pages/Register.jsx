@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast'; // ✅ Import Toast
 
 const Register = () => {
   const navigate = useNavigate();
@@ -24,9 +25,11 @@ const Register = () => {
 
     // 1. Validasi Password
     if (formData.password !== formData.confirmPassword) {
-      alert("Password dan Konfirmasi Password tidak sama!");
+      toast.error("Password dan Konfirmasi Password tidak sama!");
       return;
     }
+
+    const loadingToast = toast.loading('Mendaftarkan akun...'); // Loading
 
     // 2. Persiapkan Data
     const namaParts = formData.nama.trim().split(' ');
@@ -52,17 +55,25 @@ const Register = () => {
       });
 
       const result = await response.json();
+      
+      toast.dismiss(loadingToast); // Tutup loading
 
       if (result.success) {
-        alert("✅ Registrasi Berhasil! Silakan Login.");
-        navigate('/login');
+        // ✅ Sukses
+        toast.success("Registrasi Berhasil! Silakan Login.");
+        setTimeout(() => {
+            navigate('/login');
+        }, 1500); // Delay sedikit biar user baca notif
       } else {
-        alert("❌ Gagal Mendaftar: " + result.message);
+        // ❌ Gagal dari Backend
+        toast.error("Gagal Mendaftar: " + result.message);
       }
 
     } catch (error) {
+      toast.dismiss(loadingToast);
       console.error("Error:", error);
-      alert("❌ Terjadi kesalahan koneksi ke server.");
+      // ❌ Gagal Koneksi
+      toast.error("Terjadi kesalahan koneksi ke server.");
     }
   };
 
